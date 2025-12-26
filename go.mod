@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect

@@ -4,7 +4,6 @@ import (
 	"os"
 	"runtime"
 
-
 	media_center "media_center/src/server"
 )
 
@@ -37,7 +36,6 @@ func main() {
 	logger.Infof("Build time: %s", BuildTime)
 	logger.Infof("Golang Version: %s", GoVersion)
 	logger.Info("starting httpserver.")
-	logger.inf("ddchen 测试")
 	//加载配置
 	media_center.InitSetting()
 	if err := media_center.InitRedisClient(); err != nil {

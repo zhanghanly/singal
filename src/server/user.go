@@ -5,13 +5,13 @@ import (
 )
 
 type User struct {
-	userId string
-	joinTs int64
+	userId   string
+	createTs int64
 }
 
 func NewUser(id string) *User {
 	return &User{
-		userId: id,
-		joinTs: time.Now().Unix(),
+		userId:   id,
+		createTs: time.Now().Unix(),
 	}
 }

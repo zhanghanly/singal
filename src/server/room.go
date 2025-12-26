@@ -1,14 +1,20 @@
 package media_center
 
+import (
+	"time"
+)
+
 type Room struct {
-	roomId string
-	users  map[string]*User
+	roomId   string
+	createTs int64
+	users    map[string]*User
 }
 
 func NewRoom(id string) *Room {
 	return &Room{
-		roomId: id,
-		users:  make(map[string]*User),
+		roomId:   id,
+		createTs: time.Now().Unix(),
+		users:    make(map[string]*User),
 	}
 }
 

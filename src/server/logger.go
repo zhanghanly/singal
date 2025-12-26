@@ -14,7 +14,7 @@ var logger *logrus.Logger
 // 日志名称
 const (
 	//日志文件名
-	LOG_NAME = "media_center"
+	LOG_NAME = "singal"
 	//日志文件后缀
 	LOG_SUFFIX = ".log"
 	//单个日志文件大小，单位MB
