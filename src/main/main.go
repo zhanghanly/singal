@@ -3,8 +3,7 @@ package main
 import (
 	"os"
 	"runtime"
-
-	media_center "media_center/src/server"
+	singal "singal/src/server"
 )
 
 var (
@@ -17,7 +16,7 @@ var (
 
 func panicIfError(err error) {
 	if err != nil {
-		media_center.GetLogger().Error("error: %v", err)
+		singal.GetLogger().Error("error: %v", err)
 		panic(err)
 	}
 }
@@ -25,9 +24,9 @@ func panicIfError(err error) {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	//初始化日志
-	media_center.InitLogger()
+	singal.InitLogger()
 
-	var logger = media_center.GetLogger()
+	var logger = singal.GetLogger()
 
 	//打印版本信息
 	logger.Infof("Project Name: %s", ProjectName)
@@ -37,14 +36,14 @@ func main() {
 	logger.Infof("Golang Version: %s", GoVersion)
 	logger.Info("starting httpserver.")
 	//加载配置
-	media_center.InitSetting()
-	if err := media_center.InitRedisClient(); err != nil {
+	singal.InitSetting()
+	if err := singal.InitRedisClient(); err != nil {
 		return
 	}
 
-	media_center.NewReqQueue()
+	singal.NewReqQueue()
 
-	httpServer, err := media_center.NewHttpServer()
+	httpServer, err := singal.NewHttpServer()
 	if err != nil {
 		logger.Error("NewHttpServer() error, for: ", err)
 		os.Exit(-1)

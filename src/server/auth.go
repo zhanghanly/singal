@@ -1,4 +1,4 @@
-package media_center
+package singal
 
 type AuthParam struct {
 	AppId     string

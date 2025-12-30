@@ -1,4 +1,4 @@
-package media_center
+package singal
 
 import (
 	"time"

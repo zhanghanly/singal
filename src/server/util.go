@@ -1,4 +1,4 @@
-package media_center
+package singal
 
 import (
 	"errors"
@@ -35,7 +35,7 @@ func isWindow() bool {
 	return runtime.GOOS == "windows"
 }
 
-//得到本机ip
+// 得到本机ip
 func GetClientIp() (string, error) {
 	addrs, err := net.InterfaceAddrs()
 

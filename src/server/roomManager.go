@@ -1,4 +1,4 @@
-package media_center
+package singal
 
 type RoomManager struct {
 	rooms map[string]*Room
