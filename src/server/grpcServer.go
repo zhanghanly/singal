@@ -1,8 +1,9 @@
 package singal
 
 import (
-	"google.golang.org/grpc"
+	"io"
 	pb "singal/src/server/proto"
+	"time"
 )
 
 type MediaType int32
@@ -32,17 +33,150 @@ type Router struct {
 }
 
 type SfuNode struct {
-	id         string
-	publicIp   string
-	minPort    uint32
-	maxPort    uint32
-	lastActive int64
-	routers    map[string]*Router
+	id        string
+	publicIp  string
+	minPort   uint32
+	maxPort   uint32
+	lastAlive int64
+	routers   map[string]*Router
+	stream    pb.SfuService_SfuSessionServer
+}
+
+func NewSfuNode(stream1 pb.SfuService_SfuSessionServer) *SfuNode {
+	return &SfuNode{
+		routers: make(map[string]*Router),
+		stream:  stream1,
+	}
 }
 
 type GrpcServer struct {
+	pb.UnimplementedSfuServiceServer
+	sfuNodes map[string]*SfuNode
 }
 
 func NewGrpcServer() *GrpcServer {
+	return &GrpcServer{
+		sfuNodes: make(map[string]*SfuNode),
+	}
+}
 
+// SfuSession 双向流处理
+func (g *GrpcServer) SfuSession(stream pb.SfuService_SfuSessionServer) error {
+	logger.Infof("New game session stream established")
+
+	var node *SfuNode
+	defer func() {
+		if node != nil {
+			g.cleanSfuNode(node.id)
+		}
+	}()
+
+	// 处理接收到的消息
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			logger.Fatal("Client disconnected:")
+			return nil
+		}
+		if err != nil {
+			logger.Fatal("Error receiving message:")
+			return err
+		}
+
+		resp, shouldExit := g.handleClientMsg(stream, msg, &node)
+		if shouldExit {
+			return nil
+		}
+
+		// 发送响应
+		if resp != nil {
+			if err := stream.Send(resp); err != nil {
+				logger.Fatal("Failed to send response: %v", err)
+				return err
+			}
+		}
+	}
+}
+
+func (g *GrpcServer) handleClientMsg(
+	stream pb.SfuService_SfuSessionServer,
+	msg *pb.SfuMessage,
+	node **SfuNode) (*pb.SfuMessage, bool) {
+	switch msg.Type {
+	case pb.MessageType_REGISTER:
+		return g.handleSfuNodeRegister(stream, msg, node)
+
+	case pb.MessageType_KEEPALIVE:
+		return g.handleSfuNodeKeepalive(stream, msg, node)
+
+	case pb.MessageType_FLOW_REPORT:
+		return g.handleSfuNodeFlowReport(stream, msg, node)
+
+	case pb.MessageType_AUDIO_LEVEL_REPORT:
+		return g.handleSfuNodeAudioLevel(stream, msg, node)
+
+	default:
+		logger.Warn("Unknown message type: %v", msg.Type)
+		return &pb.SfuMessage{
+			Type:    pb.MessageType_UNKNOWN,
+			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+		}, false
+	}
+}
+
+func (g *GrpcServer) handleSfuNodeRegister(
+	stream pb.SfuService_SfuSessionServer,
+	msg *pb.SfuMessage,
+	node **SfuNode) (*pb.SfuMessage, bool) {
+	regReq := msg.GetRegisterRequest()
+	if _, ok := g.sfuNodes[regReq.ServerId]; !ok {
+		sfuNode := NewSfuNode(stream)
+		g.sfuNodes[regReq.ServerId] = sfuNode
+	}
+
+	return &pb.SfuMessage{
+		Type:    pb.MessageType_UNKNOWN,
+		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+	}, false
+}
+
+func (g *GrpcServer) handleSfuNodeKeepalive(
+	stream pb.SfuService_SfuSessionServer,
+	msg *pb.SfuMessage,
+	node **SfuNode) (*pb.SfuMessage, bool) {
+	aliveReq := msg.GetKeepaliveRequest()
+	if sfuNode, ok := g.sfuNodes[aliveReq.ServerId]; ok {
+		sfuNode.lastAlive = time.Now().Unix()
+	}
+
+	return &pb.SfuMessage{
+		Type:    pb.MessageType_UNKNOWN,
+		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+	}, false
+}
+
+func (g *GrpcServer) handleSfuNodeFlowReport(
+	stream pb.SfuService_SfuSessionServer,
+	msg *pb.SfuMessage,
+	node **SfuNode) (*pb.SfuMessage, bool) {
+	return &pb.SfuMessage{
+		Type:    pb.MessageType_UNKNOWN,
+		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+	}, false
+}
+
+func (g *GrpcServer) handleSfuNodeAudioLevel(
+	stream pb.SfuService_SfuSessionServer,
+	msg *pb.SfuMessage,
+	node **SfuNode) (*pb.SfuMessage, bool) {
+	return &pb.SfuMessage{
+		Type:    pb.MessageType_UNKNOWN,
+		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+	}, false
+}
+
+func (g *GrpcServer) cleanSfuNode(nodeId string) {
+	if _, ok := g.sfuNodes[nodeId]; ok {
+		delete(g.sfuNodes, nodeId)
+	}
 }
