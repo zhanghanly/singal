@@ -7,6 +7,7 @@ import (
 type Room struct {
 	roomId   string
 	createTs int64
+	node     *SfuNode
 	users    map[string]*User
 }
 

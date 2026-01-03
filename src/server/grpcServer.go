@@ -26,26 +26,18 @@ type Consumer struct {
 	newSsrc    uint32
 }
 
-type Router struct {
-	id        string
-	producers map[string]*Producer
-	consumers map[string]*Consumer
-}
-
 type SfuNode struct {
 	id        string
 	publicIp  string
 	minPort   uint32
 	maxPort   uint32
 	lastAlive int64
-	routers   map[string]*Router
 	stream    pb.SfuService_SfuSessionServer
 }
 
 func NewSfuNode(stream1 pb.SfuService_SfuSessionServer) *SfuNode {
 	return &SfuNode{
-		routers: make(map[string]*Router),
-		stream:  stream1,
+		stream: stream1,
 	}
 }
 
@@ -179,4 +171,53 @@ func (g *GrpcServer) cleanSfuNode(nodeId string) {
 	if _, ok := g.sfuNodes[nodeId]; ok {
 		delete(g.sfuNodes, nodeId)
 	}
+}
+
+func (g *GrpcServer) createRoom(room *Room) error {
+	node := room.node
+	if node != nil {
+		req := &pb.SfuMessage{
+			Type:    pb.MessageType_CREATE_ROUTER,
+			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+		}
+		if err := node.stream.Send(req); err != nil {
+			logger.Fatal("Failed to send create room response: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *GrpcServer) createProducer(user *User) error {
+	node := user.node
+	if node != nil {
+		req := &pb.SfuMessage{
+			Type:    pb.MessageType_PRODUCE_UPDATE,
+			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+		}
+		if err := node.stream.Send(req); err != nil {
+			logger.Fatal("Failed to send create room response: %v", err)
+			return err
+		}
+	}
+
+	return nil
+
+}
+
+func (g *GrpcServer) createConsumer(user *User) error {
+	node := user.node
+	if node != nil {
+		req := &pb.SfuMessage{
+			Type:    pb.MessageType_CONSUME_UPDATE,
+			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+		}
+		if err := node.stream.Send(req); err != nil {
+			logger.Fatal("Failed to send create room response: %v", err)
+			return err
+		}
+	}
+
+	return nil
 }
