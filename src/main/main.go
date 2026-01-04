@@ -1,7 +1,7 @@
 package main
 
 import (
-	"os"
+	"net/http"
 	"runtime"
 	singal "singal/src/server"
 )
@@ -41,26 +41,10 @@ func main() {
 		return
 	}
 
-	singal.NewReqQueue()
+	server := singal.NewServer()
+	go server.Run()
 
-	httpServer, err := singal.NewHttpServer()
-	if err != nil {
-		logger.Error("NewHttpServer() error, for: ", err)
-		os.Exit(-1)
-	}
-
-	if err := httpServer.Start(); err != nil {
-		logger.Errorf("HttpServer.Start() error, for: %v", err)
-		return
-	}
-
-	if err := httpServer.Run(); err != nil {
-		logger.Errorf("HttpServer.Run() error, for: %v", err)
-		return
-	}
-
-	if err := httpServer.Stop(); err != nil {
-		logger.Errorf("HttpServer.Stop() error, for: %v", err)
-		return
-	}
+	http.HandleFunc("/ws", server.HandleWebSocket)
+	port := ":8080"
+	http.ListenAndServe(port, nil)
 }

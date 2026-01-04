@@ -26,7 +26,5 @@ func (r *Room) AddUser(user *User) {
 }
 
 func (r *Room) DeleteUser(user *User) {
-	if _, ok := r.users[user.userId]; ok {
-		delete(r.users, user.userId)
-	}
+	delete(r.users, user.userId)
 }

@@ -19,7 +19,5 @@ func (rm *RoomManager) GetOrCreateRoom(roomId string) *Room {
 }
 
 func (rm *RoomManager) DeleteRoom(roomId string) {
-	if _, ok := rm.rooms[roomId]; ok {
-		delete(rm.rooms, roomId)
-	}
+	delete(rm.rooms, roomId)
 }

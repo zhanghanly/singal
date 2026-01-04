@@ -3,59 +3,98 @@ package singal
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
+type Message struct {
+	Type    string      `json:"type"`
+	Content interface{} `json:"content"`
+	Sender  string      `json:"sender"`
+	Time    int64       `json:"time"`
+}
+
+type WsServer struct {
+	Users      map[*User]bool
+	Register   chan *User
+	Unregister chan *User
+	Broadcast  chan Message
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
-var clients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan Message)
-
-type Message struct {
-	Username string `json:"username"`
-	Text     string `json:"text"`
-}
-
-func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// 升级HTTP连接为WebSocket连接
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer ws.Close()
-
-	// 注册新的客户端
-	clients[ws] = true
-
-	for {
-		var msg Message
-		// 读取客户端发送的消息
-		err := ws.ReadJSON(&msg)
-		if err != nil {
-			delete(clients, ws)
-			break
-		}
-		// 将消息发送到广播通道
-		broadcast <- msg
+func NewServer() *WsServer {
+	return &WsServer{
+		Users:      make(map[*User]bool),
+		Register:   make(chan *User),
+		Unregister: make(chan *User),
+		Broadcast:  make(chan Message),
 	}
 }
 
-func handleMessages() {
+func (w *WsServer) Run() {
 	for {
-		// 从广播通道获取消息
-		msg := <-broadcast
-		// 将消息发送给所有连接的客户端
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				client.Close()
-				delete(clients, client)
+		select {
+		case user := <-w.Register:
+			w.Users[user] = true
+			logger.Infof("user id=%s connected", user.userId)
+
+			joinMsg := Message{
+				Type:    "system",
+				Content: fmt.Sprintf("user id=%s join room", user.userId),
+				Sender:  "server",
+				Time:    time.Now().Unix(),
+			}
+			w.Broadcast <- joinMsg
+
+		case user := <-w.Unregister:
+			if _, ok := w.Users[user]; ok {
+				delete(w.Users, user)
+				close(user.sendMsg)
+				logger.Infof("user id=%s disconnected", user.userId)
+
+				leaveMsg := Message{
+					Type:    "system",
+					Content: fmt.Sprintf("user id=%s disconnected", user.userId),
+					Sender:  "server",
+					Time:    time.Now().Unix(),
+				}
+				w.Broadcast <- leaveMsg
+			}
+
+		case message := <-w.Broadcast:
+			for user := range w.Users {
+				select {
+				case user.sendMsg <- message:
+				default:
+					close(user.sendMsg)
+					delete(w.Users, user)
+				}
 			}
 		}
 	}
+}
+
+// handle WebSocket connection
+func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(rw, r, nil)
+	if err != nil {
+		logger.Fatal("WebSocket upgrade failed: ", err)
+		return
+	}
+
+	user := NewUser(conn, w)
+	user.userId = fmt.Sprintf("user_%d", time.Now().UnixNano())
+
+	w.Register <- user
+
+	go user.WriteMessage()
+	go user.ReadMessage()
 }
