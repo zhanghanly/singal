@@ -12,8 +12,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var clients = make(map[*websocket.Conn]bool) // 连接的客户端
-var broadcast = make(chan Message)           // 广播通道
+var clients = make(map[*websocket.Conn]bool)
+var broadcast = make(chan Message)
 
 type Message struct {
 	Username string `json:"username"`

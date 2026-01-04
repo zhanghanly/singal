@@ -168,17 +168,20 @@ func (g *GrpcServer) handleSfuNodeAudioLevel(
 }
 
 func (g *GrpcServer) cleanSfuNode(nodeId string) {
-	if _, ok := g.sfuNodes[nodeId]; ok {
-		delete(g.sfuNodes, nodeId)
-	}
+	delete(g.sfuNodes, nodeId)
 }
 
 func (g *GrpcServer) createRoom(room *Room) error {
 	node := room.node
 	if node != nil {
 		req := &pb.SfuMessage{
-			Type:    pb.MessageType_CREATE_ROUTER,
-			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+			Type:      pb.MessageType_CREATE_ROUTER,
+			Timestamp: time.Now().Unix(),
+			Content: &pb.SfuMessage_CreateRouteRequest{
+				&pb.CreateRouterRequest{
+					ServerId: node.id,
+				},
+			},
 		}
 		if err := node.stream.Send(req); err != nil {
 			logger.Fatal("Failed to send create room response: %v", err)
@@ -193,8 +196,13 @@ func (g *GrpcServer) createProducer(user *User) error {
 	node := user.node
 	if node != nil {
 		req := &pb.SfuMessage{
-			Type:    pb.MessageType_PRODUCE_UPDATE,
-			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+			Type:      pb.MessageType_PRODUCE_UPDATE,
+			Timestamp: time.Now().Unix(),
+			Content: &pb.SfuMessage_ProduceStateRequest{
+				&pb.ProduceStateRequest{
+					ServerId: node.id,
+				},
+			},
 		}
 		if err := node.stream.Send(req); err != nil {
 			logger.Fatal("Failed to send create room response: %v", err)
@@ -203,15 +211,19 @@ func (g *GrpcServer) createProducer(user *User) error {
 	}
 
 	return nil
-
 }
 
 func (g *GrpcServer) createConsumer(user *User) error {
 	node := user.node
 	if node != nil {
 		req := &pb.SfuMessage{
-			Type:    pb.MessageType_CONSUME_UPDATE,
-			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
+			Type:      pb.MessageType_CONSUME_UPDATE,
+			Timestamp: time.Now().Unix(),
+			Content: &pb.SfuMessage_ConsumeStateRequest{
+				&pb.ConsumeStateRequest{
+					ServerId: node.id,
+				},
+			},
 		}
 		if err := node.stream.Send(req); err != nil {
 			logger.Fatal("Failed to send create room response: %v", err)
