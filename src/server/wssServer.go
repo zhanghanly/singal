@@ -84,6 +84,11 @@ func (w *WsServer) Run() {
 
 // handle WebSocket connection
 func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
+	clientProtocols := websocket.Subprotocols(r)
+	if len(clientProtocols) > 0 {
+		upgrader.Subprotocols = []string{clientProtocols[0]}
+	}
+
 	conn, err := upgrader.Upgrade(rw, r, nil)
 	if err != nil {
 		logger.Fatal("WebSocket upgrade failed: ", err)
