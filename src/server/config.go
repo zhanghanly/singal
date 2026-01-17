@@ -1,71 +1,58 @@
 package singal
 
 import (
-	"io/ioutil"
-	"log"
-
-	"gopkg.in/yaml.v2"
+	"encoding/json"
+	"os"
 )
 
-type Set struct {
-	Redis            Redis
-	Node             Node
-	RegionList       []RegionList
-	HttpServerInfo   HttpServerInfo
-	HttpCallBackInfo HttpCallBackInfo
-	AuthWhiteList    []AuthWhiteList
+type CodecCapabilities struct {
+	Kind       string           `json:"kind"`
+	MimeType   string           `json:"mimeType"`
+	ClockRate  int              `json:"clockRate"`
+	Channels   int              `json:"channels,omitempty"`
+	Parameters *CodecParameters `json:"parameters,omitempty"`
 }
 
-type Redis struct {
-	Host      string `yaml:"host"`
-	Password  string `yaml:"password"`
-	Timeout   int    `yaml:"timeout"`
-	MaxActive int    `yaml:"max_active"`
-	MaxIdle   int    `yaml:"max_idle"`
-	Db        int
+type CodecParameters struct {
+	PacketizationMode     int    `json:"packetization-mode,omitempty"`
+	ProfileLevelId        string `json:"profile-level-id,omitempty"`
+	LevelAsymmetryAllowed int    `json:"level-asymmetry-allowed,omitempty"`
+	XGoogleStartBitrate   int    `json:"x-google-start-bitrate,omitempty"`
 }
 
-type Node struct {
-	FirstLevel        int `yaml:"firstlevel"`
-	SecondLevel       int `yaml:"secondlevel"`
-	PushStreamBound   int `yaml:"pushstreambound"`
-	BandwidthBound    int `yaml:"bandwidthbound"`
-	MaxPushStreamNums int `yaml:"maxpushstreamnums"`
+type Https struct {
+	Port int    `json:"port"`
+	Cert string `json:"cert,omitempty"`
+	Key  string `json:"key,omitempty"`
 }
 
-type RegionList struct {
-	Region     string `yaml:"region"`
-	Domain     string `yaml:"domain"`
-	DomainPort int    `yaml:"domainport"`
+type Config struct {
+	MediaCodecs []CodecCapabilities `json:"mediaCodecs"`
+	Http        Https               `json:"https"`
 }
 
-type HttpServerInfo struct {
-	Port         int `yaml:"port"`
-	ReadTimeOut  int `yaml:"readtimeout"`
-	WriteTimeOut int `yaml:"writetimeout"`
-	IsKeepAlive  int `yaml:"iskeepalive"`
-}
+var gConfig *Config
 
-type HttpCallBackInfo struct {
-	CallBackUrl string `yaml:"callbackurl"`
-	Timeout     int    `yaml:"timeout"`
-}
-
-// 鉴权白名单
-type AuthWhiteList struct {
-	Signature string `yaml:"signature"`
-}
-
-var gConfig *Set
-
-func InitSetting() {
-	file, err := ioutil.ReadFile("../conf/config.yml")
+func InitSetting() error {
+	fileData, err := os.ReadFile("./config.json")
 	if err != nil {
-		log.Fatal("fail to read file:", err)
+		logger.Info("read config.json failed:")
+		return err
 	}
-	gConfig = &Set{}
-	err = yaml.Unmarshal(file, gConfig)
+
+	gConfig = &Config{}
+	err = json.Unmarshal(fileData, gConfig)
 	if err != nil {
-		log.Fatal("fail to yaml unmarshal:", err)
+		logger.Info("fail to yaml unmarshal:")
+		return err
 	}
+
+	logger.Info(len(gConfig.MediaCodecs))
+	//jsonData, err := json.Marshal(gConfig)
+	//if err != nil {
+	//	logger.Info("failed: ")
+	//	return
+	//}
+	//os.WriteFile("test.json", jsonData, 0644)
+	return nil
 }

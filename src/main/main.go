@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"runtime"
 	singal "singal/src/server"
 )
@@ -27,7 +26,6 @@ func main() {
 	singal.InitLogger()
 
 	var logger = singal.GetLogger()
-
 	//打印版本信息
 	logger.Infof("Project Name: %s", ProjectName)
 	logger.Infof("Build version: %s", BuildVersion)
@@ -37,14 +35,8 @@ func main() {
 	logger.Info("starting httpserver.")
 	//加载配置
 	singal.InitSetting()
-	if err := singal.InitRedisClient(); err != nil {
-		return
-	}
-
-	server := singal.NewServer()
-	go server.Run()
-
-	http.HandleFunc("/ws", server.HandleWebSocket)
-	port := ":8080"
-	http.ListenAndServe(port, nil)
+	//if err := singal.InitRedisClient(); err != nil {
+	//	return
+	//}
+	singal.StartWssServer()
 }

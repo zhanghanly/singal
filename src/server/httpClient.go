@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"time"
 )
 
 type HttpReqMgr struct {
@@ -35,7 +34,7 @@ func NewHttpReqMgr() *HttpReqMgr {
 	mytransport.MaxConnsPerHost = gHttpReqMgr.maxConnsPerHost
 
 	gHttpReqMgr.client = &http.Client{
-		Timeout:   time.Duration(gConfig.HttpCallBackInfo.Timeout) * time.Second,
+		//Timeout:   time.Duration(gConfig.HttpCallBackInfo.Timeout) * time.Second,
 		Transport: mytransport,
 	}
 

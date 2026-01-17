@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -74,15 +73,15 @@ func NewHttpServer() (hs *HttpServer, err error) {
 	router.Use(gin.Recovery())
 
 	hs.Handler = NewHttpHandler(router)
-	hs.Server = &http.Server{
-		Addr:         ":" + strconv.Itoa(gConfig.HttpServerInfo.Port),
-		Handler:      router,
-		ReadTimeout:  time.Duration(gConfig.HttpServerInfo.ReadTimeOut) * time.Second,
-		WriteTimeout: time.Duration(gConfig.HttpServerInfo.WriteTimeOut) * time.Second,
-	}
-	if gConfig.HttpServerInfo.IsKeepAlive == 1 {
-		hs.Server.SetKeepAlivesEnabled(true)
-	}
+	//hs.Server = &http.Server{
+	//	Addr:         ":" + strconv.Itoa(gConfig.HttpServerInfo.Port),
+	//	Handler:      router,
+	//	ReadTimeout:  time.Duration(gConfig.HttpServerInfo.ReadTimeOut) * time.Second,
+	//	WriteTimeout: time.Duration(gConfig.HttpServerInfo.WriteTimeOut) * time.Second,
+	//}
+	//if gConfig.HttpServerInfo.IsKeepAlive == 1 {
+	//	hs.Server.SetKeepAlivesEnabled(true)
+	//}
 	return hs, nil
 }
 

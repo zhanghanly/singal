@@ -98,3 +98,16 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 	go user.WriteMessage()
 	go user.ReadMessage()
 }
+
+func StartWssServer() {
+	server := NewServer()
+	go server.Run()
+
+	http.HandleFunc("/", server.HandleWebSocket)
+	port := ":8080"
+	http.ListenAndServe(port, nil)
+	//err := http.ListenAndServeTLS(":4443", gConfig.Http.Cert, gConfig.Http.Key, nil)
+	//if err != nil {
+	//	logger.Warnf("start wss server failed, %v", err)
+	//}
+}

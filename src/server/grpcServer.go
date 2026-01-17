@@ -6,35 +6,6 @@ import (
 	"time"
 )
 
-type MediaType int32
-
-const (
-	VIDEO MediaType = 0
-	AUDIO MediaType = 1
-)
-
-type Producer struct {
-	id        string
-	mediaType MediaType
-	ssrc      uint32
-}
-
-type Consumer struct {
-	id         string
-	mediaType  MediaType
-	originSsrc uint32
-	newSsrc    uint32
-}
-
-type SfuNode struct {
-	id        string
-	publicIp  string
-	minPort   uint32
-	maxPort   uint32
-	lastAlive int64
-	stream    pb.SfuService_SfuSessionServer
-}
-
 func NewSfuNode(stream1 pb.SfuService_SfuSessionServer) *SfuNode {
 	return &SfuNode{
 		stream: stream1,
