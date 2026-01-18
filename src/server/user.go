@@ -7,12 +7,34 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type WsRequest struct {
+	Request bool        `json:"request"`
+	Id      int         `json:"id"`
+	Method  string      `json:"method"`
+	Data    interface{} `json:"data"`
+}
+
+type WsResponse struct {
+	Response bool        `json:"response"`
+	Id       int         `json:"id"`
+	Ok       bool        `json:"method"`
+	Data     interface{} `json:"data"`
+}
+
+type WsNotification struct {
+	Notification bool        `json:"notification"`
+	Method       string      `json:"method"`
+	Data         interface{} `json:"data"`
+}
+
 type User struct {
 	userId           string
+	peerId           string
+	displayName      string
 	createTs         int64
 	wsConn           *websocket.Conn
 	wsServer         *WsServer
-	sendMsg          chan Message
+	sendMsg          chan []byte
 	roomId           string
 	node             *SfuNode
 	videoProducerId  string
@@ -21,12 +43,14 @@ type User struct {
 	audioConsumerIds []string
 }
 
-func NewUser(conn *websocket.Conn, server *WsServer) *User {
+func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid string) *User {
 	return &User{
 		wsConn:           conn,
 		wsServer:         server,
+		peerId:           peerid,
+		roomId:           roomid,
 		createTs:         time.Now().Unix(),
-		sendMsg:          make(chan Message, 256),
+		sendMsg:          make(chan []byte),
 		videoConsumerIds: make([]string, 0),
 		audioConsumerIds: make([]string, 0),
 	}
@@ -36,6 +60,7 @@ func (u *User) ReadMessage() {
 	defer func() {
 		u.wsServer.Unregister <- u
 		u.wsConn.Close()
+		logger.Infof("close connection from read")
 	}()
 
 	for {
@@ -46,35 +71,41 @@ func (u *User) ReadMessage() {
 			}
 			break
 		}
+		logger.Infof("read msg=%s", string(messageBytes))
 
-		var msg Message
-		if err := json.Unmarshal(messageBytes, &msg); err != nil {
+		var wsReq WsRequest
+		if err := json.Unmarshal(messageBytes, &wsReq); err != nil {
 			logger.Infof("JSON decode failed: %v", err)
 			continue
 		}
 
-		msg.Sender = u.userId
-		msg.Time = time.Now().Unix()
+		switch wsReq.Method {
+		case "getRouterRtpCapabilities":
+			logger.Infof("recv getRouterRtpCapabilities message")
+			//u.wsServer.Broadcast <- msg
 
-		switch msg.Type {
-		case "chat":
-			logger.Infof("recv chat message: %s", msg.Content)
-			u.wsServer.Broadcast <- msg
+		case "createWebRtcTransport":
+			logger.Infof("recv createWebRtcTransport message")
+			//u.sendMsg <- response
 
-		case "ping":
-			response := Message{
-				Type:    "pong",
-				Content: "pong",
-				Sender:  "server",
-				Time:    time.Now().Unix(),
-			}
-			u.sendMsg <- response
+		case "connectWebRtcTransport":
+			logger.Infof("recv connectWebRtcTransport message")
+			//u.wsServer.Broadcast <- msg
 
-		case "getOrCreateRoom":
-			u.wsServer.Broadcast <- msg
+		case "join":
+			logger.Infof("recv join message")
+			//u.wsServer.Broadcast <- msg
+
+		case "produceData":
+			logger.Infof("recv produceData message")
+			//u.wsServer.Broadcast <- msg
+
+		case "produce":
+			logger.Infof("recv produce message")
+			//u.wsServer.Broadcast <- msg
 
 		default:
-			logger.Infof("unknown message type: %s", msg.Type)
+			logger.Infof("unknown message type:")
 		}
 	}
 }
@@ -82,29 +113,13 @@ func (u *User) ReadMessage() {
 func (u *User) WriteMessage() {
 	defer func() {
 		u.wsConn.Close()
+		logger.Infof("close connection from write")
 	}()
 
-	for {
-		select {
-		case message, ok := <-u.sendMsg:
-			if !ok {
-				u.wsConn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			jsonMsg, err := json.Marshal(message)
-			if err != nil {
-				logger.Infof("JSON encode failed: %v", err)
-				continue
-			}
-
-			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonMsg); err != nil {
-				logger.Infof("write message failed: %v", err)
-				return
-			}
-
-		default:
-			logger.Infof("write message failed:")
+	for message := range u.sendMsg {
+		if err := u.wsConn.WriteMessage(websocket.TextMessage, message); err != nil {
+			logger.Infof("write message failed: %v", err)
+			return
 		}
 	}
 }

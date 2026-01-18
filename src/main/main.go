@@ -33,6 +33,8 @@ func main() {
 	logger.Infof("Build time: %s", BuildTime)
 	logger.Infof("Golang Version: %s", GoVersion)
 	logger.Info("starting httpserver.")
+
+	singal.NewRoomManager()
 	//加载配置
 	singal.InitSetting()
 	//if err := singal.InitRedisClient(); err != nil {

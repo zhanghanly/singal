@@ -21,7 +21,7 @@ type CodecParameters struct {
 }
 
 type Https struct {
-	Port int    `json:"port"`
+	Addr string `json:"addr"`
 	Cert string `json:"cert,omitempty"`
 	Key  string `json:"key,omitempty"`
 }

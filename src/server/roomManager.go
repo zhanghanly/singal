@@ -4,8 +4,10 @@ type RoomManager struct {
 	rooms map[string]*Room
 }
 
-func NewRoomManager() *RoomManager {
-	return &RoomManager{
+var gRoomManager *RoomManager
+
+func NewRoomManager() {
+	gRoomManager = &RoomManager{
 		rooms: make(map[string]*Room),
 	}
 }
@@ -13,6 +15,7 @@ func NewRoomManager() *RoomManager {
 func (rm *RoomManager) GetOrCreateRoom(roomId string) *Room {
 	if _, ok := rm.rooms[roomId]; !ok {
 		rm.rooms[roomId] = NewRoom(roomId)
+		logger.Infof("create room roomId=%s", roomId)
 	}
 
 	return rm.rooms[roomId]

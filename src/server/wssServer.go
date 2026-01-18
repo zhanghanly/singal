@@ -8,18 +8,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Message struct {
-	Type    string      `json:"type"`
-	Content interface{} `json:"content"`
-	Sender  string      `json:"sender"`
-	Time    int64       `json:"time"`
-}
-
 type WsServer struct {
 	Users      map[*User]bool
 	Register   chan *User
 	Unregister chan *User
-	Broadcast  chan Message
+	//Broadcast  chan Message
 }
 
 var upgrader = websocket.Upgrader{
@@ -35,7 +28,7 @@ func NewServer() *WsServer {
 		Users:      make(map[*User]bool),
 		Register:   make(chan *User),
 		Unregister: make(chan *User),
-		Broadcast:  make(chan Message),
+		//Broadcast:  make(chan Message),
 	}
 }
 
@@ -44,46 +37,41 @@ func (w *WsServer) Run() {
 		select {
 		case user := <-w.Register:
 			w.Users[user] = true
-			logger.Infof("user id=%s connected", user.userId)
-
-			joinMsg := Message{
-				Type:    "system",
-				Content: fmt.Sprintf("user id=%s join room", user.userId),
-				Sender:  "server",
-				Time:    time.Now().Unix(),
-			}
-			w.Broadcast <- joinMsg
+			room := gRoomManager.GetOrCreateRoom(user.roomId)
+			room.AddUser(user)
+			logger.Infof("userId=%s peerId=%s roomId=%s connected", user.userId, user.peerId, user.roomId)
+			//w.Broadcast <- joinMsg
 
 		case user := <-w.Unregister:
 			if _, ok := w.Users[user]; ok {
 				delete(w.Users, user)
 				close(user.sendMsg)
-				logger.Infof("user id=%s disconnected", user.userId)
-
-				leaveMsg := Message{
-					Type:    "system",
-					Content: fmt.Sprintf("user id=%s disconnected", user.userId),
-					Sender:  "server",
-					Time:    time.Now().Unix(),
-				}
-				w.Broadcast <- leaveMsg
+				room := gRoomManager.GetOrCreateRoom(user.roomId)
+				room.DeleteUser(user)
+				logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.peerId, user.roomId)
+				//w.Broadcast <- leaveMsg
 			}
 
-		case message := <-w.Broadcast:
-			for user := range w.Users {
-				select {
-				case user.sendMsg <- message:
-				default:
-					close(user.sendMsg)
-					delete(w.Users, user)
-				}
-			}
+			//case message := <-w.Broadcast:
+			//	for user := range w.Users {
+			//		select {
+			//		case user.sendMsg <- message:
+			//		default:
+			//			close(user.sendMsg)
+			//			delete(w.Users, user)
+			//		}
+			//	}
 		}
 	}
 }
 
 // handle WebSocket connection
 func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
+	logger.Infof("recieve wbsocket connection, url=%s", r.URL.String())
+
+	queryParams := r.URL.Query()
+	roomId := queryParams.Get("roomId")
+	peerId := queryParams.Get("peerId")
 	clientProtocols := websocket.Subprotocols(r)
 	if len(clientProtocols) > 0 {
 		upgrader.Subprotocols = []string{clientProtocols[0]}
@@ -94,10 +82,10 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 		logger.Fatal("WebSocket upgrade failed: ", err)
 		return
 	}
+	logger.Infof("accept wbsocket connection")
 
-	user := NewUser(conn, w)
+	user := NewUser(conn, w, peerId, roomId)
 	user.userId = fmt.Sprintf("user_%d", time.Now().UnixNano())
-
 	w.Register <- user
 
 	go user.WriteMessage()
@@ -109,8 +97,7 @@ func StartWssServer() {
 	go server.Run()
 
 	http.HandleFunc("/", server.HandleWebSocket)
-	port := ":8080"
-	http.ListenAndServe(port, nil)
+	http.ListenAndServe(gConfig.Http.Addr, nil)
 	//err := http.ListenAndServeTLS(":4443", gConfig.Http.Cert, gConfig.Http.Key, nil)
 	//if err != nil {
 	//	logger.Warnf("start wss server failed, %v", err)
