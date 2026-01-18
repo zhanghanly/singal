@@ -6,11 +6,13 @@ import (
 )
 
 type CodecCapabilities struct {
-	Kind       string           `json:"kind"`
-	MimeType   string           `json:"mimeType"`
-	ClockRate  int              `json:"clockRate"`
-	Channels   int              `json:"channels,omitempty"`
-	Parameters *CodecParameters `json:"parameters,omitempty"`
+	Kind                 string           `json:"kind"`
+	MimeType             string           `json:"mimeType"`
+	ClockRate            int              `json:"clockRate"`
+	Channels             int              `json:"channels,omitempty"`
+	Parameters           *CodecParameters `json:"parameters,omitempty"`
+	Feedbacks            []RtcpFeedback   `json:"rtcpFeedback"`
+	PreferredPayloadType int              `json:"preferredPayloadType"`
 }
 
 type CodecParameters struct {
@@ -20,15 +22,32 @@ type CodecParameters struct {
 	XGoogleStartBitrate   int    `json:"x-google-start-bitrate,omitempty"`
 }
 
+type RtcpFeedback struct {
+	Type      string `json:"type"`
+	Parameter string `json:"parameter"`
+}
+
+type HeaderExtension struct {
+	Kind             string `json:"kind"`
+	Uri              string `json:"uri"`
+	PreferredId      int    `json:"preferredId"`
+	PreferredEncrypt bool   `json:"preferredEncrypt"`
+	Direction        string `json:"direction"`
+}
+
 type Https struct {
 	Addr string `json:"addr"`
 	Cert string `json:"cert,omitempty"`
 	Key  string `json:"key,omitempty"`
 }
 
+type RouterRtpCapabilities struct {
+	MediaCodecs      []CodecCapabilities `json:"codecs"`
+	HeaderExtensions []HeaderExtension   `json:"headerExtensions"`
+}
+
 type Config struct {
-	MediaCodecs []CodecCapabilities `json:"mediaCodecs"`
-	Http        Https               `json:"https"`
+	RtpCapabilities RouterRtpCapabilities `json:"routerRtpCapabilities"`
 }
 
 var gConfig *Config
@@ -47,12 +66,13 @@ func InitSetting() error {
 		return err
 	}
 
-	logger.Info(len(gConfig.MediaCodecs))
+	//logger.Info(len(gConfig.MediaCodecs))
 	//jsonData, err := json.Marshal(gConfig)
 	//if err != nil {
 	//	logger.Info("failed: ")
-	//	return
+	//	return err
 	//}
 	//os.WriteFile("test.json", jsonData, 0644)
+
 	return nil
 }

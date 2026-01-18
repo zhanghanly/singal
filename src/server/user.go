@@ -17,7 +17,7 @@ type WsRequest struct {
 type WsResponse struct {
 	Response bool        `json:"response"`
 	Id       int         `json:"id"`
-	Ok       bool        `json:"method"`
+	Ok       bool        `json:"ok"`
 	Data     interface{} `json:"data"`
 }
 
@@ -34,7 +34,7 @@ type User struct {
 	createTs         int64
 	wsConn           *websocket.Conn
 	wsServer         *WsServer
-	sendMsg          chan []byte
+	sendMsg          chan *WsResponse
 	roomId           string
 	node             *SfuNode
 	videoProducerId  string
@@ -50,7 +50,7 @@ func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid strin
 		peerId:           peerid,
 		roomId:           roomid,
 		createTs:         time.Now().Unix(),
-		sendMsg:          make(chan []byte),
+		sendMsg:          make(chan *WsResponse, 0),
 		videoConsumerIds: make([]string, 0),
 		audioConsumerIds: make([]string, 0),
 	}
@@ -82,7 +82,13 @@ func (u *User) ReadMessage() {
 		switch wsReq.Method {
 		case "getRouterRtpCapabilities":
 			logger.Infof("recv getRouterRtpCapabilities message")
-			//u.wsServer.Broadcast <- msg
+			response := &WsResponse{
+				Id:       wsReq.Id,
+				Response: true,
+				Ok:       true,
+				Data:     gConfig,
+			}
+			u.sendMsg <- response
 
 		case "createWebRtcTransport":
 			logger.Infof("recv createWebRtcTransport message")
@@ -117,7 +123,14 @@ func (u *User) WriteMessage() {
 	}()
 
 	for message := range u.sendMsg {
-		if err := u.wsConn.WriteMessage(websocket.TextMessage, message); err != nil {
+		jsonData, err := json.Marshal(message)
+		if err != nil {
+			logger.Info("failed to transform rtpCapabilities to json")
+			continue
+		}
+		logger.Infof("send response to client")
+
+		if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
 			logger.Infof("write message failed: %v", err)
 			return
 		}
