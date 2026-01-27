@@ -2,10 +2,14 @@ package singal
 
 import (
 	"errors"
+	"net"
 	pb "singal/src/server/proto"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 type WorkerStream struct {
@@ -91,5 +95,27 @@ func (s *WebRtcServer) CreateRouterOnWorker(workerID uint64, req *pb.CreateRoute
 
 	case <-time.After(5 * time.Second):
 		return nil, errors.New("request timeout")
+	}
+}
+
+func StartGrpcServer() {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		logger.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Time:    15 * time.Second,
+			Timeout: 5 * time.Second,
+		}),
+	)
+
+	rtcServer := NewWebRtcServer()
+	pb.RegisterWebRtcServiceServer(grpcServer, rtcServer)
+
+	logger.Infoln("gRPC WebRTC Server running on :50051...")
+	if err := grpcServer.Serve(lis); err != nil {
+		logger.Fatalf("failed to serve: %v", err)
 	}
 }

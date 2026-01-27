@@ -3,6 +3,7 @@ package main
 import (
 	"runtime"
 	singal "singal/src/server"
+	"sync"
 )
 
 var (
@@ -22,11 +23,9 @@ func panicIfError(err error) {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	//初始化日志
 	singal.InitLogger()
 
 	var logger = singal.GetLogger()
-	//打印版本信息
 	logger.Infof("Project Name: %s", ProjectName)
 	logger.Infof("Build version: %s", BuildVersion)
 	logger.Infof("Git branch: %s", GitBranch)
@@ -35,10 +34,24 @@ func main() {
 	logger.Info("starting httpserver.")
 
 	singal.NewRoomManager()
-	//加载配置
 	singal.InitSetting()
 	//if err := singal.InitRedisClient(); err != nil {
 	//	return
 	//}
-	singal.StartWssServer()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// start WebSocket server
+	go func() {
+		defer wg.Done()
+		singal.StartWssServer()
+	}()
+	// start grpc server
+	go func() {
+		defer wg.Done()
+		singal.StartGrpcServer()
+	}()
+
+	wg.Wait()
 }
