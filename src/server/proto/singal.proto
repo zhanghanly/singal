@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package server;
+option go_package = "./proto";
+
+message ListenInfo {
+  string protocol = 1; 
+  string ip = 2;             
+  uint32 port = 3;         
+  string announced_address = 4; 
+  string announced_ip = 5;
+  uint32 announced_port = 6;
+  bool tcp = 7;
+  bool ipv6Only = 8;
+  bool udpReusePort = 9;
+  uint32 recv_buffer_size = 10;
+  uint32 send_buffer_size = 11;
+}
+
+message CreateRouterRequest {
+  string worker_id = 1;
+  string room_id = 2;
+  string serverId = 3;
+  ListenInfo info = 4;
+}
+
+message CreateRouterResponse {
+  string router_id = 1;
+  bool success = 2;
+  string error_detail = 3;
+}
+
+enum TransportDirection {
+  DIRECTION_AUTO = 0;
+  DIRECTION_SEND = 1;
+  DIRECTION_RECV = 2;
+  DIRECTION_BOTH = 3;
+}
+
+message DtlsFingerprint {
+  string algorithm = 1;
+  string value = 2;
+}
+
+message IceCandidate {
+  string foundation = 1;
+  uint32 priority = 2;
+  string ip = 3;
+  string protocol = 4;
+  uint32 port = 5;
+  string type = 6;
+  string tcp_type = 7;
+}
+
+message CreateTransportRequest {
+  string worker_id = 1;
+  string router_id = 2;
+  TransportDirection direction = 3;
+  bool enable_udp = 4;
+  bool enable_tcp = 5;
+  bool prefer_udp = 6;
+  bool prefer_tcp = 7;
+}
+
+message CreateTransportResponse {
+  string transport_id = 1;
+  string ice_ufrag = 2;
+  string ice_pwd = 3;
+  repeated IceCandidate ice_candidates = 4;
+  repeated DtlsFingerprint dtls_fingerprints = 5;
+  string dtls_role = 6;
+  bool success = 7;
+  string error_detail = 8;
+}
+
+enum MediaKind {
+  MEDIA_KIND_AUDIO = 0;
+  MEDIA_KIND_VIDEO = 1;
+}
+
+message ProduceRequest {
+  string transport_id = 1;
+  MediaKind kind = 2;
+  string app_data = 3;
+}
+
+message ProduceResponse {
+  string producer_id = 1;
+  bool success = 2;
+  string error_detail = 3;
+}
+
+message ConsumeRequest {
+  string transport_id = 1;
+  string producer_id = 2;
+}
+
+message ConsumeResponse {
+  string consumer_id = 1;
+  string producer_id = 2;
+  MediaKind kind = 3;
+  bool success = 4;
+  string error_detail = 5;
+}
+
+message WorkerToServer {
+  uint64 seq_id = 1;
+  
+  oneof payload {
+    CreateRouterResponse create_router_res = 2;
+    CreateTransportRequest create_transport_res =3;
+    ProduceResponse produce_res = 4;
+    ConsumeResponse consumer_res = 5;
+    
+    string stats_push = 6; 
+  }
+}
+
+message ServerToWorker {
+  uint64 seq_id = 1;
+  
+  oneof payload {
+    CreateRouterRequest create_router_req = 2;
+    CreateTransportRequest create_transport_req =3;
+    ProduceRequest produce_req = 4;
+    ConsumeRequest consumer_req = 5;
+    string global_notification = 6;
+  }
+}
+
+service WebRtcService {
+  rpc Sync(stream WorkerToServer) returns (stream ServerToWorker);
+}

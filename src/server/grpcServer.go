@@ -1,206 +1,95 @@
 package singal
 
 import (
-	"io"
+	"errors"
 	pb "singal/src/server/proto"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
-func NewSfuNode(stream1 pb.SfuService_SfuSessionServer) *SfuNode {
-	return &SfuNode{
-		stream: stream1,
+type WorkerStream struct {
+	stream  pb.WebRtcService_SyncServer
+	pending map[uint64]chan *pb.WorkerToServer
+	mu      sync.Mutex
+}
+
+type WebRtcServer struct {
+	pb.UnimplementedWebRtcServiceServer
+	workers sync.Map // map[string]*WorkerStream
+	nextID  uint64
+}
+
+func NewWebRtcServer() *WebRtcServer {
+	return &WebRtcServer{}
+}
+
+func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
+	firstReq, err := stream.Recv()
+	if err != nil {
+		return err
 	}
-}
+	workerID := firstReq.SeqId
 
-type GrpcServer struct {
-	pb.UnimplementedSfuServiceServer
-	sfuNodes map[string]*SfuNode
-}
-
-func NewGrpcServer() *GrpcServer {
-	return &GrpcServer{
-		sfuNodes: make(map[string]*SfuNode),
+	ws := &WorkerStream{
+		stream:  stream,
+		pending: make(map[uint64]chan *pb.WorkerToServer),
 	}
-}
+	s.workers.Store(workerID, ws)
+	defer s.workers.Delete(workerID)
 
-// SfuSession 双向流处理
-func (g *GrpcServer) SfuSession(stream pb.SfuService_SfuSessionServer) error {
-	logger.Infof("New game session stream established")
+	logger.Infof("Worker %d connected", workerID)
 
-	var node *SfuNode
-	defer func() {
-		if node != nil {
-			g.cleanSfuNode(node.id)
-		}
-	}()
-
-	// 处理接收到的消息
 	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			logger.Fatal("Client disconnected:")
-			return nil
-		}
+		resp, err := stream.Recv()
 		if err != nil {
-			logger.Fatal("Error receiving message:")
+			logger.Infof("Worker %d disconnected: %v", workerID, err)
 			return err
 		}
 
-		resp, shouldExit := g.handleClientMsg(stream, msg, &node)
-		if shouldExit {
-			return nil
+		ws.mu.Lock()
+		if ch, ok := ws.pending[resp.SeqId]; ok {
+			ch <- resp
+			delete(ws.pending, resp.SeqId)
 		}
-
-		// 发送响应
-		if resp != nil {
-			if err := stream.Send(resp); err != nil {
-				logger.Fatal("Failed to send response: %v", err)
-				return err
-			}
-		}
+		ws.mu.Unlock()
 	}
 }
 
-func (g *GrpcServer) handleClientMsg(
-	stream pb.SfuService_SfuSessionServer,
-	msg *pb.SfuMessage,
-	node **SfuNode) (*pb.SfuMessage, bool) {
-	switch msg.Type {
-	case pb.MessageType_REGISTER:
-		return g.handleSfuNodeRegister(stream, msg, node)
-
-	case pb.MessageType_KEEPALIVE:
-		return g.handleSfuNodeKeepalive(stream, msg, node)
-
-	case pb.MessageType_FLOW_REPORT:
-		return g.handleSfuNodeFlowReport(stream, msg, node)
-
-	case pb.MessageType_AUDIO_LEVEL_REPORT:
-		return g.handleSfuNodeAudioLevel(stream, msg, node)
-
-	default:
-		logger.Warn("Unknown message type: %v", msg.Type)
-		return &pb.SfuMessage{
-			Type:    pb.MessageType_UNKNOWN,
-			Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
-		}, false
+func (s *WebRtcServer) CreateRouterOnWorker(workerID uint64, req *pb.CreateRouterRequest) (*pb.CreateRouterResponse, error) {
+	val, ok := s.workers.Load(workerID)
+	if !ok {
+		return nil, errors.New("worker offline")
 	}
-}
+	conn := val.(*WorkerStream)
 
-func (g *GrpcServer) handleSfuNodeRegister(
-	stream pb.SfuService_SfuSessionServer,
-	msg *pb.SfuMessage,
-	node **SfuNode) (*pb.SfuMessage, bool) {
-	regReq := msg.GetRegisterRequest()
-	if _, ok := g.sfuNodes[regReq.ServerId]; !ok {
-		sfuNode := NewSfuNode(stream)
-		g.sfuNodes[regReq.ServerId] = sfuNode
+	seqID := atomic.AddUint64(&s.nextID, 1)
+	resCh := make(chan *pb.WorkerToServer, 1)
+
+	conn.mu.Lock()
+	conn.pending[seqID] = resCh
+	conn.mu.Unlock()
+
+	serverMsg := &pb.ServerToWorker{
+		SeqId: seqID,
+		Payload: &pb.ServerToWorker_CreateRouterReq{
+			CreateRouterReq: req,
+		},
+	}
+	if err := conn.stream.Send(serverMsg); err != nil {
+		return nil, err
 	}
 
-	return &pb.SfuMessage{
-		Type:    pb.MessageType_UNKNOWN,
-		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
-	}, false
-}
+	// wait or timeout
+	select {
+	case resMsg := <-resCh:
+		res := resMsg.GetCreateRouterRes()
+		if !res.Success {
+			return nil, errors.New(res.ErrorDetail)
+		}
+		return res, nil
 
-func (g *GrpcServer) handleSfuNodeKeepalive(
-	stream pb.SfuService_SfuSessionServer,
-	msg *pb.SfuMessage,
-	node **SfuNode) (*pb.SfuMessage, bool) {
-	aliveReq := msg.GetKeepaliveRequest()
-	if sfuNode, ok := g.sfuNodes[aliveReq.ServerId]; ok {
-		sfuNode.lastAlive = time.Now().Unix()
+	case <-time.After(5 * time.Second):
+		return nil, errors.New("request timeout")
 	}
-
-	return &pb.SfuMessage{
-		Type:    pb.MessageType_UNKNOWN,
-		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
-	}, false
-}
-
-func (g *GrpcServer) handleSfuNodeFlowReport(
-	stream pb.SfuService_SfuSessionServer,
-	msg *pb.SfuMessage,
-	node **SfuNode) (*pb.SfuMessage, bool) {
-	return &pb.SfuMessage{
-		Type:    pb.MessageType_UNKNOWN,
-		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
-	}, false
-}
-
-func (g *GrpcServer) handleSfuNodeAudioLevel(
-	stream pb.SfuService_SfuSessionServer,
-	msg *pb.SfuMessage,
-	node **SfuNode) (*pb.SfuMessage, bool) {
-	return &pb.SfuMessage{
-		Type:    pb.MessageType_UNKNOWN,
-		Content: &pb.SfuMessage_TextMessage{TextMessage: "Unknown message type"},
-	}, false
-}
-
-func (g *GrpcServer) cleanSfuNode(nodeId string) {
-	delete(g.sfuNodes, nodeId)
-}
-
-func (g *GrpcServer) createRoom(room *Room) error {
-	node := room.node
-	if node != nil {
-		req := &pb.SfuMessage{
-			Type:      pb.MessageType_CREATE_ROUTER,
-			Timestamp: time.Now().Unix(),
-			Content: &pb.SfuMessage_CreateRouteRequest{
-				&pb.CreateRouterRequest{
-					ServerId: node.id,
-				},
-			},
-		}
-		if err := node.stream.Send(req); err != nil {
-			logger.Fatal("Failed to send create room response: %v", err)
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (g *GrpcServer) createProducer(user *User) error {
-	node := user.node
-	if node != nil {
-		req := &pb.SfuMessage{
-			Type:      pb.MessageType_PRODUCE_UPDATE,
-			Timestamp: time.Now().Unix(),
-			Content: &pb.SfuMessage_ProduceStateRequest{
-				&pb.ProduceStateRequest{
-					ServerId: node.id,
-				},
-			},
-		}
-		if err := node.stream.Send(req); err != nil {
-			logger.Fatal("Failed to send create room response: %v", err)
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (g *GrpcServer) createConsumer(user *User) error {
-	node := user.node
-	if node != nil {
-		req := &pb.SfuMessage{
-			Type:      pb.MessageType_CONSUME_UPDATE,
-			Timestamp: time.Now().Unix(),
-			Content: &pb.SfuMessage_ConsumeStateRequest{
-				&pb.ConsumeStateRequest{
-					ServerId: node.id,
-				},
-			},
-		}
-		if err := node.stream.Send(req); err != nil {
-			logger.Fatal("Failed to send create room response: %v", err)
-			return err
-		}
-	}
-
-	return nil
 }

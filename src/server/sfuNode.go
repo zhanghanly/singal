@@ -1,9 +1,5 @@
 package singal
 
-import (
-	pb "singal/src/server/proto"
-)
-
 type MediaType int32
 
 const (
@@ -37,5 +33,4 @@ type SfuNode struct {
 	minPort   uint32
 	maxPort   uint32
 	lastAlive int64
-	stream    pb.SfuService_SfuSessionServer
 }
