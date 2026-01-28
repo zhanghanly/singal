@@ -7,14 +7,15 @@ import (
 type Room struct {
 	roomId   string
 	createTs int64
-	node     *SfuNode
+	router   *Router
 	users    map[string]*User
 }
 
-func NewRoom(id string) *Room {
+func NewRoom(id string, route *Router) *Room {
 	return &Room{
 		roomId:   id,
 		createTs: time.Now().Unix(),
+		router:   route,
 		users:    make(map[string]*User),
 	}
 }

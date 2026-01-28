@@ -12,10 +12,13 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
+var gRtcServer *WebRtcServer
+
 type WorkerStream struct {
 	stream  pb.WebRtcService_SyncServer
 	pending map[uint64]chan *pb.WorkerToServer
 	mu      sync.Mutex
+	worker  *Worker
 }
 
 type WebRtcServer struct {
@@ -60,8 +63,9 @@ func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
 	}
 }
 
-func (s *WebRtcServer) CreateRouterOnWorker(workerID uint64, req *pb.CreateRouterRequest) (*pb.CreateRouterResponse, error) {
-	val, ok := s.workers.Load(workerID)
+func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
+	workerId := s.chooseBestWorker()
+	val, ok := s.workers.Load(workerId)
 	if !ok {
 		return nil, errors.New("worker offline")
 	}
@@ -74,10 +78,28 @@ func (s *WebRtcServer) CreateRouterOnWorker(workerID uint64, req *pb.CreateRoute
 	conn.pending[seqID] = resCh
 	conn.mu.Unlock()
 
+	router := conn.worker.CreateRouter()
 	serverMsg := &pb.ServerToWorker{
 		SeqId: seqID,
 		Payload: &pb.ServerToWorker_CreateRouterReq{
-			CreateRouterReq: req,
+			CreateRouterReq: &pb.CreateRouterRequest{
+				WorkerId: workerId,
+				RoomId:   router.routerId,
+				ServerId: RandString(10),
+				Info: &pb.ListenInfo{
+					Protocol:         "UDP",
+					Ip:               "0.0.0.0",
+					Port:             router.port,
+					AnnouncedAddress: "",
+					AnnouncedIp:      router.publicIp,
+					AnnouncedPort:    router.port,
+					Tcp:              false,
+					Ipv6Only:         false,
+					UdpReusePort:     false,
+					RecvBufferSize:   router.recvBufSize,
+					SendBufferSize:   router.sendBufSize,
+				},
+			},
 		},
 	}
 	if err := conn.stream.Send(serverMsg); err != nil {
@@ -91,11 +113,17 @@ func (s *WebRtcServer) CreateRouterOnWorker(workerID uint64, req *pb.CreateRoute
 		if !res.Success {
 			return nil, errors.New(res.ErrorDetail)
 		}
-		return res, nil
+
+		conn.worker.AddRouter(router)
+		return router, nil
 
 	case <-time.After(5 * time.Second):
 		return nil, errors.New("request timeout")
 	}
+}
+
+func (s *WebRtcServer) chooseBestWorker() string {
+	return "1"
 }
 
 func StartGrpcServer() {
@@ -111,8 +139,8 @@ func StartGrpcServer() {
 		}),
 	)
 
-	rtcServer := NewWebRtcServer()
-	pb.RegisterWebRtcServiceServer(grpcServer, rtcServer)
+	gRtcServer = NewWebRtcServer()
+	pb.RegisterWebRtcServiceServer(grpcServer, gRtcServer)
 
 	logger.Infoln("gRPC WebRTC Server running on :50051...")
 	if err := grpcServer.Serve(lis); err != nil {

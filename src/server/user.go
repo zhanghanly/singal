@@ -36,7 +36,6 @@ type User struct {
 	wsServer         *WsServer
 	sendMsg          chan *WsResponse
 	roomId           string
-	node             *SfuNode
 	videoProducerId  string
 	audioProducerId  string
 	videoConsumerIds []string

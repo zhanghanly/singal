@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"time"
 )
 
 // isExist 文件或目录是否存在
@@ -69,30 +68,14 @@ func InetAtoN(ip string) int64 {
 }
 
 const (
-	letterBytes = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 // RandString https://github.com/kpbird/golang_random_string
 func RandString(n int) string {
-	rand.Seed(time.Now().UnixNano())
-	output := make([]byte, n)
-	// We will take n bytes, one byte for each character of output.
-	randomness := make([]byte, n)
-	// read all random
-	_, err := rand.Read(randomness)
-	if err != nil {
-		panic(err)
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
-	l := len(letterBytes)
-	// fill output
-	for pos := range output {
-		// get random item
-		random := randomness[pos]
-		// random % 64
-		randomPos := random % uint8(l)
-		// put into output
-		output[pos] = letterBytes[randomPos]
-	}
-
-	return string(output)
+	return string(b)
 }
