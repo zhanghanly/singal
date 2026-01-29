@@ -108,7 +108,7 @@ message WorkerToServer {
   
   oneof payload {
     CreateRouterResponse create_router_res = 2;
-    CreateTransportRequest create_transport_res =3;
+    CreateTransportResponse create_transport_res =3;
     ProduceResponse produce_res = 4;
     ConsumeResponse consumer_res = 5;
     

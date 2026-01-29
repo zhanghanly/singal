@@ -1023,7 +1023,7 @@ func (x *WorkerToServer) GetCreateRouterRes() *CreateRouterResponse {
 	return nil
 }
 
-func (x *WorkerToServer) GetCreateTransportRes() *CreateTransportRequest {
+func (x *WorkerToServer) GetCreateTransportRes() *CreateTransportResponse {
 	if x != nil {
 		if x, ok := x.Payload.(*WorkerToServer_CreateTransportRes); ok {
 			return x.CreateTransportRes
@@ -1068,7 +1068,7 @@ type WorkerToServer_CreateRouterRes struct {
 }
 
 type WorkerToServer_CreateTransportRes struct {
-	CreateTransportRes *CreateTransportRequest `protobuf:"bytes,3,opt,name=create_transport_res,json=createTransportRes,proto3,oneof"`
+	CreateTransportRes *CreateTransportResponse `protobuf:"bytes,3,opt,name=create_transport_res,json=createTransportRes,proto3,oneof"`
 }
 
 type WorkerToServer_ProduceRes struct {
@@ -1313,11 +1313,11 @@ const file_singal_proto_rawDesc = "" +
 	"producerId\x12%\n" +
 	"\x04kind\x18\x03 \x01(\x0e2\x11.server.MediaKindR\x04kind\x12\x18\n" +
 	"\asuccess\x18\x04 \x01(\bR\asuccess\x12!\n" +
-	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\xed\x02\n" +
+	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\xee\x02\n" +
 	"\x0eWorkerToServer\x12\x15\n" +
 	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12J\n" +
-	"\x11create_router_res\x18\x02 \x01(\v2\x1c.server.CreateRouterResponseH\x00R\x0fcreateRouterRes\x12R\n" +
-	"\x14create_transport_res\x18\x03 \x01(\v2\x1e.server.CreateTransportRequestH\x00R\x12createTransportRes\x12:\n" +
+	"\x11create_router_res\x18\x02 \x01(\v2\x1c.server.CreateRouterResponseH\x00R\x0fcreateRouterRes\x12S\n" +
+	"\x14create_transport_res\x18\x03 \x01(\v2\x1f.server.CreateTransportResponseH\x00R\x12createTransportRes\x12:\n" +
 	"\vproduce_res\x18\x04 \x01(\v2\x17.server.ProduceResponseH\x00R\n" +
 	"produceRes\x12<\n" +
 	"\fconsumer_res\x18\x05 \x01(\v2\x17.server.ConsumeResponseH\x00R\vconsumerRes\x12\x1f\n" +
@@ -1383,7 +1383,7 @@ var file_singal_proto_depIdxs = []int32{
 	1,  // 4: server.ProduceRequest.kind:type_name -> server.MediaKind
 	1,  // 5: server.ConsumeResponse.kind:type_name -> server.MediaKind
 	4,  // 6: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
-	7,  // 7: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportRequest
+	8,  // 7: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
 	10, // 8: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
 	12, // 9: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
 	3,  // 10: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
