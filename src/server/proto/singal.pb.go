@@ -519,11 +519,12 @@ type CreateTransportRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
 	RouterId      string                 `protobuf:"bytes,2,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	Direction     TransportDirection     `protobuf:"varint,3,opt,name=direction,proto3,enum=server.TransportDirection" json:"direction,omitempty"`
-	EnableUdp     bool                   `protobuf:"varint,4,opt,name=enable_udp,json=enableUdp,proto3" json:"enable_udp,omitempty"`
-	EnableTcp     bool                   `protobuf:"varint,5,opt,name=enable_tcp,json=enableTcp,proto3" json:"enable_tcp,omitempty"`
-	PreferUdp     bool                   `protobuf:"varint,6,opt,name=prefer_udp,json=preferUdp,proto3" json:"prefer_udp,omitempty"`
-	PreferTcp     bool                   `protobuf:"varint,7,opt,name=prefer_tcp,json=preferTcp,proto3" json:"prefer_tcp,omitempty"`
+	TransportId   string                 `protobuf:"bytes,3,opt,name=transport_id,json=transportId,proto3" json:"transport_id,omitempty"`
+	Direction     TransportDirection     `protobuf:"varint,4,opt,name=direction,proto3,enum=server.TransportDirection" json:"direction,omitempty"`
+	EnableUdp     bool                   `protobuf:"varint,5,opt,name=enable_udp,json=enableUdp,proto3" json:"enable_udp,omitempty"`
+	EnableTcp     bool                   `protobuf:"varint,6,opt,name=enable_tcp,json=enableTcp,proto3" json:"enable_tcp,omitempty"`
+	PreferUdp     bool                   `protobuf:"varint,7,opt,name=prefer_udp,json=preferUdp,proto3" json:"prefer_udp,omitempty"`
+	PreferTcp     bool                   `protobuf:"varint,8,opt,name=prefer_tcp,json=preferTcp,proto3" json:"prefer_tcp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -568,6 +569,13 @@ func (x *CreateTransportRequest) GetWorkerId() string {
 func (x *CreateTransportRequest) GetRouterId() string {
 	if x != nil {
 		return x.RouterId
+	}
+	return ""
+}
+
+func (x *CreateTransportRequest) GetTransportId() string {
+	if x != nil {
+		return x.TransportId
 	}
 	return ""
 }
@@ -1271,19 +1279,20 @@ const file_singal_proto_rawDesc = "" +
 	"\bprotocol\x18\x04 \x01(\tR\bprotocol\x12\x12\n" +
 	"\x04port\x18\x05 \x01(\rR\x04port\x12\x12\n" +
 	"\x04type\x18\x06 \x01(\tR\x04type\x12\x19\n" +
-	"\btcp_type\x18\a \x01(\tR\atcpType\"\x88\x02\n" +
+	"\btcp_type\x18\a \x01(\tR\atcpType\"\xab\x02\n" +
 	"\x16CreateTransportRequest\x12\x1b\n" +
 	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x1b\n" +
-	"\trouter_id\x18\x02 \x01(\tR\brouterId\x128\n" +
-	"\tdirection\x18\x03 \x01(\x0e2\x1a.server.TransportDirectionR\tdirection\x12\x1d\n" +
+	"\trouter_id\x18\x02 \x01(\tR\brouterId\x12!\n" +
+	"\ftransport_id\x18\x03 \x01(\tR\vtransportId\x128\n" +
+	"\tdirection\x18\x04 \x01(\x0e2\x1a.server.TransportDirectionR\tdirection\x12\x1d\n" +
 	"\n" +
-	"enable_udp\x18\x04 \x01(\bR\tenableUdp\x12\x1d\n" +
+	"enable_udp\x18\x05 \x01(\bR\tenableUdp\x12\x1d\n" +
 	"\n" +
-	"enable_tcp\x18\x05 \x01(\bR\tenableTcp\x12\x1d\n" +
+	"enable_tcp\x18\x06 \x01(\bR\tenableTcp\x12\x1d\n" +
 	"\n" +
-	"prefer_udp\x18\x06 \x01(\bR\tpreferUdp\x12\x1d\n" +
+	"prefer_udp\x18\a \x01(\bR\tpreferUdp\x12\x1d\n" +
 	"\n" +
-	"prefer_tcp\x18\a \x01(\bR\tpreferTcp\"\xcf\x02\n" +
+	"prefer_tcp\x18\b \x01(\bR\tpreferTcp\"\xcf\x02\n" +
 	"\x17CreateTransportResponse\x12!\n" +
 	"\ftransport_id\x18\x01 \x01(\tR\vtransportId\x12\x1b\n" +
 	"\tice_ufrag\x18\x02 \x01(\tR\biceUfrag\x12\x17\n" +

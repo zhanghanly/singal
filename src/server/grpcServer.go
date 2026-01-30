@@ -122,6 +122,50 @@ func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
 	}
 }
 
+func (s *WebRtcServer) CreateWebrtcTransport(router *Router) error {
+	workerId := router.workerId
+	val, ok := s.workers.Load(workerId)
+	if !ok {
+		return errors.New("worker offline")
+	}
+	conn := val.(*WorkerStream)
+
+	seqID := atomic.AddUint64(&s.nextID, 1)
+	resCh := make(chan *pb.WorkerToServer, 1)
+
+	conn.mu.Lock()
+	conn.pending[seqID] = resCh
+	conn.mu.Unlock()
+
+	serverMsg := &pb.ServerToWorker{
+		SeqId: seqID,
+		Payload: &pb.ServerToWorker_CreateTransportReq{
+			CreateTransportReq: &pb.CreateTransportRequest{
+				WorkerId:    workerId,
+				RouterId:    router.routerId,
+				TransportId: RandString(12),
+			},
+		},
+	}
+	if err := conn.stream.Send(serverMsg); err != nil {
+		return err
+	}
+
+	// wait or timeout
+	select {
+	case resMsg := <-resCh:
+		res := resMsg.GetCreateTransportRes()
+		if !res.Success {
+			return errors.New(res.ErrorDetail)
+		}
+
+		return nil
+
+	case <-time.After(5 * time.Second):
+		return errors.New("request timeout")
+	}
+}
+
 func (s *WebRtcServer) chooseBestWorker() string {
 	return "1"
 }

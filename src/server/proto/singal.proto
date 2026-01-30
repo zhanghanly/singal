@@ -55,11 +55,12 @@ message IceCandidate {
 message CreateTransportRequest {
   string worker_id = 1;
   string router_id = 2;
-  TransportDirection direction = 3;
-  bool enable_udp = 4;
-  bool enable_tcp = 5;
-  bool prefer_udp = 6;
-  bool prefer_tcp = 7;
+  string transport_id = 3;
+  TransportDirection direction = 4;
+  bool enable_udp = 5;
+  bool enable_tcp = 6;
+  bool prefer_udp = 7;
+  bool prefer_tcp = 8;
 }
 
 message CreateTransportResponse {
