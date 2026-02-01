@@ -8,16 +8,19 @@ const (
 )
 
 type Producer struct {
-	id        string
-	mediaType MediaType
-	ssrc      uint32
+	id          string
+	transportId string
+	mediaType   MediaType
+	ssrc        uint32
 }
 
 type Consumer struct {
-	id         string
-	mediaType  MediaType
-	originSsrc uint32
-	newSsrc    uint32
+	id          string
+	transportId string
+	producers   []*Producer
+	mediaType   MediaType
+	originSsrc  uint32
+	newSsrc     uint32
 }
 
 type RtpHeaderExtension struct {
@@ -39,6 +42,21 @@ type Router struct {
 	recvBufSize uint32
 
 	workerId string
+
+	producers []*Producer
+	consumers []*Consumer
+}
+
+func (r *Router) addProducer(producer *Producer) {
+	if producer != nil {
+		r.producers = append(r.producers, producer)
+	}
+}
+
+func (r *Router) addConsumer(consumer *Consumer) {
+	if consumer != nil {
+		r.consumers = append(r.consumers, consumer)
+	}
 }
 
 type Worker struct {
@@ -61,6 +79,8 @@ func (w *Worker) CreateRouter() *Router {
 		sendBufSize:   1024,
 		recvBufSize:   1024,
 		workerId:      w.workerId,
+		producers:     make([]*Producer, 2),
+		consumers:     make([]*Consumer, 2),
 	}
 
 	return router

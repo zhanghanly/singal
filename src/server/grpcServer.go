@@ -122,11 +122,11 @@ func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
 	}
 }
 
-func (s *WebRtcServer) CreateWebrtcTransport(router *Router) error {
+func (s *WebRtcServer) CreateWebrtcTransport(router *Router) (*pb.CreateTransportResponse, error) {
 	workerId := router.workerId
 	val, ok := s.workers.Load(workerId)
 	if !ok {
-		return errors.New("worker offline")
+		return nil, errors.New("worker offline")
 	}
 	conn := val.(*WorkerStream)
 
@@ -148,7 +148,7 @@ func (s *WebRtcServer) CreateWebrtcTransport(router *Router) error {
 		},
 	}
 	if err := conn.stream.Send(serverMsg); err != nil {
-		return err
+		return nil, err
 	}
 
 	// wait or timeout
@@ -156,13 +156,13 @@ func (s *WebRtcServer) CreateWebrtcTransport(router *Router) error {
 	case resMsg := <-resCh:
 		res := resMsg.GetCreateTransportRes()
 		if !res.Success {
-			return errors.New(res.ErrorDetail)
+			return nil, errors.New(res.ErrorDetail)
 		}
 
-		return nil
+		return res, nil
 
 	case <-time.After(5 * time.Second):
-		return errors.New("request timeout")
+		return nil, errors.New("request timeout")
 	}
 }
 

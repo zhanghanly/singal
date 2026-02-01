@@ -10,9 +10,9 @@ type SCTPCapabilities struct {
 }
 
 type AppData struct {
-	Direction string `json:"direction,omitempty"`
-	Channel   string `json:"channel,omitempty"`
-	Source    string `json:"source,omitempty"`
+	Direction string `json:"direction"`
+	Channel   string `json:"channel"`
+	Source    string `json:"source"`
 }
 
 type CreateTransportReqData struct {

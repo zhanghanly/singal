@@ -28,30 +28,24 @@ type WsNotification struct {
 }
 
 type User struct {
-	userId           string
-	peerId           string
-	displayName      string
-	createTs         int64
-	wsConn           *websocket.Conn
-	wsServer         *WsServer
-	sendMsg          chan *WsResponse
-	roomId           string
-	videoProducerId  string
-	audioProducerId  string
-	videoConsumerIds []string
-	audioConsumerIds []string
+	userId      string
+	peerId      string
+	displayName string
+	createTs    int64
+	wsConn      *websocket.Conn
+	wsServer    *WsServer
+	sendMsg     chan *WsResponse
+	roomId      string
 }
 
 func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid string) *User {
 	return &User{
-		wsConn:           conn,
-		wsServer:         server,
-		peerId:           peerid,
-		roomId:           roomid,
-		createTs:         time.Now().Unix(),
-		sendMsg:          make(chan *WsResponse, 0),
-		videoConsumerIds: make([]string, 0),
-		audioConsumerIds: make([]string, 0),
+		wsConn:   conn,
+		wsServer: server,
+		peerId:   peerid,
+		roomId:   roomid,
+		createTs: time.Now().Unix(),
+		sendMsg:  make(chan *WsResponse),
 	}
 }
 
