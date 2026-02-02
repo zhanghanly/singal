@@ -715,6 +715,142 @@ func (x *CreateTransportResponse) GetErrorDetail() string {
 	return ""
 }
 
+type ConnectTransportRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId         string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	RouterId         string                 `protobuf:"bytes,2,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
+	TransportId      string                 `protobuf:"bytes,3,opt,name=transport_id,json=transportId,proto3" json:"transport_id,omitempty"`
+	DtlsRole         string                 `protobuf:"bytes,4,opt,name=dtls_role,json=dtlsRole,proto3" json:"dtls_role,omitempty"`
+	DtlsFingerprints []*DtlsFingerprint     `protobuf:"bytes,5,rep,name=dtls_fingerprints,json=dtlsFingerprints,proto3" json:"dtls_fingerprints,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ConnectTransportRequest) Reset() {
+	*x = ConnectTransportRequest{}
+	mi := &file_singal_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectTransportRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectTransportRequest) ProtoMessage() {}
+
+func (x *ConnectTransportRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectTransportRequest.ProtoReflect.Descriptor instead.
+func (*ConnectTransportRequest) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ConnectTransportRequest) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *ConnectTransportRequest) GetRouterId() string {
+	if x != nil {
+		return x.RouterId
+	}
+	return ""
+}
+
+func (x *ConnectTransportRequest) GetTransportId() string {
+	if x != nil {
+		return x.TransportId
+	}
+	return ""
+}
+
+func (x *ConnectTransportRequest) GetDtlsRole() string {
+	if x != nil {
+		return x.DtlsRole
+	}
+	return ""
+}
+
+func (x *ConnectTransportRequest) GetDtlsFingerprints() []*DtlsFingerprint {
+	if x != nil {
+		return x.DtlsFingerprints
+	}
+	return nil
+}
+
+type ConnectTransportResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TransportId   string                 `protobuf:"bytes,1,opt,name=transport_id,json=transportId,proto3" json:"transport_id,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorDetail   string                 `protobuf:"bytes,3,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectTransportResponse) Reset() {
+	*x = ConnectTransportResponse{}
+	mi := &file_singal_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectTransportResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectTransportResponse) ProtoMessage() {}
+
+func (x *ConnectTransportResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectTransportResponse.ProtoReflect.Descriptor instead.
+func (*ConnectTransportResponse) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ConnectTransportResponse) GetTransportId() string {
+	if x != nil {
+		return x.TransportId
+	}
+	return ""
+}
+
+func (x *ConnectTransportResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *ConnectTransportResponse) GetErrorDetail() string {
+	if x != nil {
+		return x.ErrorDetail
+	}
+	return ""
+}
+
 type ProduceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TransportId   string                 `protobuf:"bytes,1,opt,name=transport_id,json=transportId,proto3" json:"transport_id,omitempty"`
@@ -726,7 +862,7 @@ type ProduceRequest struct {
 
 func (x *ProduceRequest) Reset() {
 	*x = ProduceRequest{}
-	mi := &file_singal_proto_msgTypes[7]
+	mi := &file_singal_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -738,7 +874,7 @@ func (x *ProduceRequest) String() string {
 func (*ProduceRequest) ProtoMessage() {}
 
 func (x *ProduceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[7]
+	mi := &file_singal_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -751,7 +887,7 @@ func (x *ProduceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProduceRequest.ProtoReflect.Descriptor instead.
 func (*ProduceRequest) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{7}
+	return file_singal_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ProduceRequest) GetTransportId() string {
@@ -786,7 +922,7 @@ type ProduceResponse struct {
 
 func (x *ProduceResponse) Reset() {
 	*x = ProduceResponse{}
-	mi := &file_singal_proto_msgTypes[8]
+	mi := &file_singal_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -798,7 +934,7 @@ func (x *ProduceResponse) String() string {
 func (*ProduceResponse) ProtoMessage() {}
 
 func (x *ProduceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[8]
+	mi := &file_singal_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -811,7 +947,7 @@ func (x *ProduceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProduceResponse.ProtoReflect.Descriptor instead.
 func (*ProduceResponse) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{8}
+	return file_singal_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ProduceResponse) GetProducerId() string {
@@ -845,7 +981,7 @@ type ConsumeRequest struct {
 
 func (x *ConsumeRequest) Reset() {
 	*x = ConsumeRequest{}
-	mi := &file_singal_proto_msgTypes[9]
+	mi := &file_singal_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -857,7 +993,7 @@ func (x *ConsumeRequest) String() string {
 func (*ConsumeRequest) ProtoMessage() {}
 
 func (x *ConsumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[9]
+	mi := &file_singal_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -870,7 +1006,7 @@ func (x *ConsumeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsumeRequest.ProtoReflect.Descriptor instead.
 func (*ConsumeRequest) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{9}
+	return file_singal_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ConsumeRequest) GetTransportId() string {
@@ -900,7 +1036,7 @@ type ConsumeResponse struct {
 
 func (x *ConsumeResponse) Reset() {
 	*x = ConsumeResponse{}
-	mi := &file_singal_proto_msgTypes[10]
+	mi := &file_singal_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -912,7 +1048,7 @@ func (x *ConsumeResponse) String() string {
 func (*ConsumeResponse) ProtoMessage() {}
 
 func (x *ConsumeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[10]
+	mi := &file_singal_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -925,7 +1061,7 @@ func (x *ConsumeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsumeResponse.ProtoReflect.Descriptor instead.
 func (*ConsumeResponse) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{10}
+	return file_singal_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ConsumeResponse) GetConsumerId() string {
@@ -970,6 +1106,7 @@ type WorkerToServer struct {
 	//
 	//	*WorkerToServer_CreateRouterRes
 	//	*WorkerToServer_CreateTransportRes
+	//	*WorkerToServer_ConnectTransportRes
 	//	*WorkerToServer_ProduceRes
 	//	*WorkerToServer_ConsumerRes
 	//	*WorkerToServer_StatsPush
@@ -980,7 +1117,7 @@ type WorkerToServer struct {
 
 func (x *WorkerToServer) Reset() {
 	*x = WorkerToServer{}
-	mi := &file_singal_proto_msgTypes[11]
+	mi := &file_singal_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -992,7 +1129,7 @@ func (x *WorkerToServer) String() string {
 func (*WorkerToServer) ProtoMessage() {}
 
 func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[11]
+	mi := &file_singal_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1005,7 +1142,7 @@ func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerToServer.ProtoReflect.Descriptor instead.
 func (*WorkerToServer) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{11}
+	return file_singal_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *WorkerToServer) GetSeqId() uint64 {
@@ -1035,6 +1172,15 @@ func (x *WorkerToServer) GetCreateTransportRes() *CreateTransportResponse {
 	if x != nil {
 		if x, ok := x.Payload.(*WorkerToServer_CreateTransportRes); ok {
 			return x.CreateTransportRes
+		}
+	}
+	return nil
+}
+
+func (x *WorkerToServer) GetConnectTransportRes() *ConnectTransportResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*WorkerToServer_ConnectTransportRes); ok {
+			return x.ConnectTransportRes
 		}
 	}
 	return nil
@@ -1079,21 +1225,27 @@ type WorkerToServer_CreateTransportRes struct {
 	CreateTransportRes *CreateTransportResponse `protobuf:"bytes,3,opt,name=create_transport_res,json=createTransportRes,proto3,oneof"`
 }
 
+type WorkerToServer_ConnectTransportRes struct {
+	ConnectTransportRes *ConnectTransportResponse `protobuf:"bytes,4,opt,name=connect_transport_res,json=connectTransportRes,proto3,oneof"`
+}
+
 type WorkerToServer_ProduceRes struct {
-	ProduceRes *ProduceResponse `protobuf:"bytes,4,opt,name=produce_res,json=produceRes,proto3,oneof"`
+	ProduceRes *ProduceResponse `protobuf:"bytes,5,opt,name=produce_res,json=produceRes,proto3,oneof"`
 }
 
 type WorkerToServer_ConsumerRes struct {
-	ConsumerRes *ConsumeResponse `protobuf:"bytes,5,opt,name=consumer_res,json=consumerRes,proto3,oneof"`
+	ConsumerRes *ConsumeResponse `protobuf:"bytes,6,opt,name=consumer_res,json=consumerRes,proto3,oneof"`
 }
 
 type WorkerToServer_StatsPush struct {
-	StatsPush string `protobuf:"bytes,6,opt,name=stats_push,json=statsPush,proto3,oneof"`
+	StatsPush string `protobuf:"bytes,7,opt,name=stats_push,json=statsPush,proto3,oneof"`
 }
 
 func (*WorkerToServer_CreateRouterRes) isWorkerToServer_Payload() {}
 
 func (*WorkerToServer_CreateTransportRes) isWorkerToServer_Payload() {}
+
+func (*WorkerToServer_ConnectTransportRes) isWorkerToServer_Payload() {}
 
 func (*WorkerToServer_ProduceRes) isWorkerToServer_Payload() {}
 
@@ -1108,6 +1260,7 @@ type ServerToWorker struct {
 	//
 	//	*ServerToWorker_CreateRouterReq
 	//	*ServerToWorker_CreateTransportReq
+	//	*ServerToWorker_ConnectTransportReq
 	//	*ServerToWorker_ProduceReq
 	//	*ServerToWorker_ConsumerReq
 	//	*ServerToWorker_GlobalNotification
@@ -1118,7 +1271,7 @@ type ServerToWorker struct {
 
 func (x *ServerToWorker) Reset() {
 	*x = ServerToWorker{}
-	mi := &file_singal_proto_msgTypes[12]
+	mi := &file_singal_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1130,7 +1283,7 @@ func (x *ServerToWorker) String() string {
 func (*ServerToWorker) ProtoMessage() {}
 
 func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[12]
+	mi := &file_singal_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1143,7 +1296,7 @@ func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerToWorker.ProtoReflect.Descriptor instead.
 func (*ServerToWorker) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{12}
+	return file_singal_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ServerToWorker) GetSeqId() uint64 {
@@ -1173,6 +1326,15 @@ func (x *ServerToWorker) GetCreateTransportReq() *CreateTransportRequest {
 	if x != nil {
 		if x, ok := x.Payload.(*ServerToWorker_CreateTransportReq); ok {
 			return x.CreateTransportReq
+		}
+	}
+	return nil
+}
+
+func (x *ServerToWorker) GetConnectTransportReq() *ConnectTransportRequest {
+	if x != nil {
+		if x, ok := x.Payload.(*ServerToWorker_ConnectTransportReq); ok {
+			return x.ConnectTransportReq
 		}
 	}
 	return nil
@@ -1217,21 +1379,27 @@ type ServerToWorker_CreateTransportReq struct {
 	CreateTransportReq *CreateTransportRequest `protobuf:"bytes,3,opt,name=create_transport_req,json=createTransportReq,proto3,oneof"`
 }
 
+type ServerToWorker_ConnectTransportReq struct {
+	ConnectTransportReq *ConnectTransportRequest `protobuf:"bytes,4,opt,name=connect_transport_req,json=connectTransportReq,proto3,oneof"`
+}
+
 type ServerToWorker_ProduceReq struct {
-	ProduceReq *ProduceRequest `protobuf:"bytes,4,opt,name=produce_req,json=produceReq,proto3,oneof"`
+	ProduceReq *ProduceRequest `protobuf:"bytes,5,opt,name=produce_req,json=produceReq,proto3,oneof"`
 }
 
 type ServerToWorker_ConsumerReq struct {
-	ConsumerReq *ConsumeRequest `protobuf:"bytes,5,opt,name=consumer_req,json=consumerReq,proto3,oneof"`
+	ConsumerReq *ConsumeRequest `protobuf:"bytes,6,opt,name=consumer_req,json=consumerReq,proto3,oneof"`
 }
 
 type ServerToWorker_GlobalNotification struct {
-	GlobalNotification string `protobuf:"bytes,6,opt,name=global_notification,json=globalNotification,proto3,oneof"`
+	GlobalNotification string `protobuf:"bytes,7,opt,name=global_notification,json=globalNotification,proto3,oneof"`
 }
 
 func (*ServerToWorker_CreateRouterReq) isServerToWorker_Payload() {}
 
 func (*ServerToWorker_CreateTransportReq) isServerToWorker_Payload() {}
+
+func (*ServerToWorker_ConnectTransportReq) isServerToWorker_Payload() {}
 
 func (*ServerToWorker_ProduceReq) isServerToWorker_Payload() {}
 
@@ -1301,7 +1469,17 @@ const file_singal_proto_rawDesc = "" +
 	"\x11dtls_fingerprints\x18\x05 \x03(\v2\x17.server.DtlsFingerprintR\x10dtlsFingerprints\x12\x1b\n" +
 	"\tdtls_role\x18\x06 \x01(\tR\bdtlsRole\x12\x18\n" +
 	"\asuccess\x18\a \x01(\bR\asuccess\x12!\n" +
-	"\ferror_detail\x18\b \x01(\tR\verrorDetail\"u\n" +
+	"\ferror_detail\x18\b \x01(\tR\verrorDetail\"\xd9\x01\n" +
+	"\x17ConnectTransportRequest\x12\x1b\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x1b\n" +
+	"\trouter_id\x18\x02 \x01(\tR\brouterId\x12!\n" +
+	"\ftransport_id\x18\x03 \x01(\tR\vtransportId\x12\x1b\n" +
+	"\tdtls_role\x18\x04 \x01(\tR\bdtlsRole\x12D\n" +
+	"\x11dtls_fingerprints\x18\x05 \x03(\v2\x17.server.DtlsFingerprintR\x10dtlsFingerprints\"z\n" +
+	"\x18ConnectTransportResponse\x12!\n" +
+	"\ftransport_id\x18\x01 \x01(\tR\vtransportId\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
+	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"u\n" +
 	"\x0eProduceRequest\x12!\n" +
 	"\ftransport_id\x18\x01 \x01(\tR\vtransportId\x12%\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x11.server.MediaKindR\x04kind\x12\x19\n" +
@@ -1322,25 +1500,27 @@ const file_singal_proto_rawDesc = "" +
 	"producerId\x12%\n" +
 	"\x04kind\x18\x03 \x01(\x0e2\x11.server.MediaKindR\x04kind\x12\x18\n" +
 	"\asuccess\x18\x04 \x01(\bR\asuccess\x12!\n" +
-	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\xee\x02\n" +
+	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\xc6\x03\n" +
 	"\x0eWorkerToServer\x12\x15\n" +
 	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12J\n" +
 	"\x11create_router_res\x18\x02 \x01(\v2\x1c.server.CreateRouterResponseH\x00R\x0fcreateRouterRes\x12S\n" +
-	"\x14create_transport_res\x18\x03 \x01(\v2\x1f.server.CreateTransportResponseH\x00R\x12createTransportRes\x12:\n" +
-	"\vproduce_res\x18\x04 \x01(\v2\x17.server.ProduceResponseH\x00R\n" +
+	"\x14create_transport_res\x18\x03 \x01(\v2\x1f.server.CreateTransportResponseH\x00R\x12createTransportRes\x12V\n" +
+	"\x15connect_transport_res\x18\x04 \x01(\v2 .server.ConnectTransportResponseH\x00R\x13connectTransportRes\x12:\n" +
+	"\vproduce_res\x18\x05 \x01(\v2\x17.server.ProduceResponseH\x00R\n" +
 	"produceRes\x12<\n" +
-	"\fconsumer_res\x18\x05 \x01(\v2\x17.server.ConsumeResponseH\x00R\vconsumerRes\x12\x1f\n" +
+	"\fconsumer_res\x18\x06 \x01(\v2\x17.server.ConsumeResponseH\x00R\vconsumerRes\x12\x1f\n" +
 	"\n" +
-	"stats_push\x18\x06 \x01(\tH\x00R\tstatsPushB\t\n" +
-	"\apayload\"\xfc\x02\n" +
+	"stats_push\x18\a \x01(\tH\x00R\tstatsPushB\t\n" +
+	"\apayload\"\xd3\x03\n" +
 	"\x0eServerToWorker\x12\x15\n" +
 	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12I\n" +
 	"\x11create_router_req\x18\x02 \x01(\v2\x1b.server.CreateRouterRequestH\x00R\x0fcreateRouterReq\x12R\n" +
-	"\x14create_transport_req\x18\x03 \x01(\v2\x1e.server.CreateTransportRequestH\x00R\x12createTransportReq\x129\n" +
-	"\vproduce_req\x18\x04 \x01(\v2\x16.server.ProduceRequestH\x00R\n" +
+	"\x14create_transport_req\x18\x03 \x01(\v2\x1e.server.CreateTransportRequestH\x00R\x12createTransportReq\x12U\n" +
+	"\x15connect_transport_req\x18\x04 \x01(\v2\x1f.server.ConnectTransportRequestH\x00R\x13connectTransportReq\x129\n" +
+	"\vproduce_req\x18\x05 \x01(\v2\x16.server.ProduceRequestH\x00R\n" +
 	"produceReq\x12;\n" +
-	"\fconsumer_req\x18\x05 \x01(\v2\x16.server.ConsumeRequestH\x00R\vconsumerReq\x121\n" +
-	"\x13global_notification\x18\x06 \x01(\tH\x00R\x12globalNotificationB\t\n" +
+	"\fconsumer_req\x18\x06 \x01(\v2\x16.server.ConsumeRequestH\x00R\vconsumerReq\x121\n" +
+	"\x13global_notification\x18\a \x01(\tH\x00R\x12globalNotificationB\t\n" +
 	"\apayload*d\n" +
 	"\x12TransportDirection\x12\x12\n" +
 	"\x0eDIRECTION_AUTO\x10\x00\x12\x12\n" +
@@ -1366,46 +1546,51 @@ func file_singal_proto_rawDescGZIP() []byte {
 }
 
 var file_singal_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_singal_proto_goTypes = []any{
-	(TransportDirection)(0),         // 0: server.TransportDirection
-	(MediaKind)(0),                  // 1: server.MediaKind
-	(*ListenInfo)(nil),              // 2: server.ListenInfo
-	(*CreateRouterRequest)(nil),     // 3: server.CreateRouterRequest
-	(*CreateRouterResponse)(nil),    // 4: server.CreateRouterResponse
-	(*DtlsFingerprint)(nil),         // 5: server.DtlsFingerprint
-	(*IceCandidate)(nil),            // 6: server.IceCandidate
-	(*CreateTransportRequest)(nil),  // 7: server.CreateTransportRequest
-	(*CreateTransportResponse)(nil), // 8: server.CreateTransportResponse
-	(*ProduceRequest)(nil),          // 9: server.ProduceRequest
-	(*ProduceResponse)(nil),         // 10: server.ProduceResponse
-	(*ConsumeRequest)(nil),          // 11: server.ConsumeRequest
-	(*ConsumeResponse)(nil),         // 12: server.ConsumeResponse
-	(*WorkerToServer)(nil),          // 13: server.WorkerToServer
-	(*ServerToWorker)(nil),          // 14: server.ServerToWorker
+	(TransportDirection)(0),          // 0: server.TransportDirection
+	(MediaKind)(0),                   // 1: server.MediaKind
+	(*ListenInfo)(nil),               // 2: server.ListenInfo
+	(*CreateRouterRequest)(nil),      // 3: server.CreateRouterRequest
+	(*CreateRouterResponse)(nil),     // 4: server.CreateRouterResponse
+	(*DtlsFingerprint)(nil),          // 5: server.DtlsFingerprint
+	(*IceCandidate)(nil),             // 6: server.IceCandidate
+	(*CreateTransportRequest)(nil),   // 7: server.CreateTransportRequest
+	(*CreateTransportResponse)(nil),  // 8: server.CreateTransportResponse
+	(*ConnectTransportRequest)(nil),  // 9: server.ConnectTransportRequest
+	(*ConnectTransportResponse)(nil), // 10: server.ConnectTransportResponse
+	(*ProduceRequest)(nil),           // 11: server.ProduceRequest
+	(*ProduceResponse)(nil),          // 12: server.ProduceResponse
+	(*ConsumeRequest)(nil),           // 13: server.ConsumeRequest
+	(*ConsumeResponse)(nil),          // 14: server.ConsumeResponse
+	(*WorkerToServer)(nil),           // 15: server.WorkerToServer
+	(*ServerToWorker)(nil),           // 16: server.ServerToWorker
 }
 var file_singal_proto_depIdxs = []int32{
 	2,  // 0: server.CreateRouterRequest.info:type_name -> server.ListenInfo
 	0,  // 1: server.CreateTransportRequest.direction:type_name -> server.TransportDirection
 	6,  // 2: server.CreateTransportResponse.ice_candidates:type_name -> server.IceCandidate
 	5,  // 3: server.CreateTransportResponse.dtls_fingerprints:type_name -> server.DtlsFingerprint
-	1,  // 4: server.ProduceRequest.kind:type_name -> server.MediaKind
-	1,  // 5: server.ConsumeResponse.kind:type_name -> server.MediaKind
-	4,  // 6: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
-	8,  // 7: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
-	10, // 8: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
-	12, // 9: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
-	3,  // 10: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
-	7,  // 11: server.ServerToWorker.create_transport_req:type_name -> server.CreateTransportRequest
-	9,  // 12: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest
-	11, // 13: server.ServerToWorker.consumer_req:type_name -> server.ConsumeRequest
-	13, // 14: server.WebRtcService.Sync:input_type -> server.WorkerToServer
-	14, // 15: server.WebRtcService.Sync:output_type -> server.ServerToWorker
-	15, // [15:16] is the sub-list for method output_type
-	14, // [14:15] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	5,  // 4: server.ConnectTransportRequest.dtls_fingerprints:type_name -> server.DtlsFingerprint
+	1,  // 5: server.ProduceRequest.kind:type_name -> server.MediaKind
+	1,  // 6: server.ConsumeResponse.kind:type_name -> server.MediaKind
+	4,  // 7: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
+	8,  // 8: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
+	10, // 9: server.WorkerToServer.connect_transport_res:type_name -> server.ConnectTransportResponse
+	12, // 10: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
+	14, // 11: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
+	3,  // 12: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
+	7,  // 13: server.ServerToWorker.create_transport_req:type_name -> server.CreateTransportRequest
+	9,  // 14: server.ServerToWorker.connect_transport_req:type_name -> server.ConnectTransportRequest
+	11, // 15: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest
+	13, // 16: server.ServerToWorker.consumer_req:type_name -> server.ConsumeRequest
+	15, // 17: server.WebRtcService.Sync:input_type -> server.WorkerToServer
+	16, // 18: server.WebRtcService.Sync:output_type -> server.ServerToWorker
+	18, // [18:19] is the sub-list for method output_type
+	17, // [17:18] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_singal_proto_init() }
@@ -1413,16 +1598,18 @@ func file_singal_proto_init() {
 	if File_singal_proto != nil {
 		return
 	}
-	file_singal_proto_msgTypes[11].OneofWrappers = []any{
+	file_singal_proto_msgTypes[13].OneofWrappers = []any{
 		(*WorkerToServer_CreateRouterRes)(nil),
 		(*WorkerToServer_CreateTransportRes)(nil),
+		(*WorkerToServer_ConnectTransportRes)(nil),
 		(*WorkerToServer_ProduceRes)(nil),
 		(*WorkerToServer_ConsumerRes)(nil),
 		(*WorkerToServer_StatsPush)(nil),
 	}
-	file_singal_proto_msgTypes[12].OneofWrappers = []any{
+	file_singal_proto_msgTypes[14].OneofWrappers = []any{
 		(*ServerToWorker_CreateRouterReq)(nil),
 		(*ServerToWorker_CreateTransportReq)(nil),
+		(*ServerToWorker_ConnectTransportReq)(nil),
 		(*ServerToWorker_ProduceReq)(nil),
 		(*ServerToWorker_ConsumerReq)(nil),
 		(*ServerToWorker_GlobalNotification)(nil),
@@ -1433,7 +1620,7 @@ func file_singal_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_singal_proto_rawDesc), len(file_singal_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

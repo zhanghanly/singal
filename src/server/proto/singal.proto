@@ -74,6 +74,20 @@ message CreateTransportResponse {
   string error_detail = 8;
 }
 
+message ConnectTransportRequest {
+  string worker_id = 1;
+  string router_id = 2;
+  string transport_id = 3;
+  string dtls_role = 4;
+  repeated DtlsFingerprint dtls_fingerprints = 5;
+}
+
+message ConnectTransportResponse {
+  string transport_id = 1;
+  bool success = 2;
+  string error_detail = 3;
+}
+
 enum MediaKind {
   MEDIA_KIND_AUDIO = 0;
   MEDIA_KIND_VIDEO = 1;
@@ -110,10 +124,10 @@ message WorkerToServer {
   oneof payload {
     CreateRouterResponse create_router_res = 2;
     CreateTransportResponse create_transport_res =3;
-    ProduceResponse produce_res = 4;
-    ConsumeResponse consumer_res = 5;
-    
-    string stats_push = 6; 
+    ConnectTransportResponse connect_transport_res =4;
+    ProduceResponse produce_res = 5;
+    ConsumeResponse consumer_res = 6;
+    string stats_push = 7; 
   }
 }
 
@@ -123,9 +137,10 @@ message ServerToWorker {
   oneof payload {
     CreateRouterRequest create_router_req = 2;
     CreateTransportRequest create_transport_req =3;
-    ProduceRequest produce_req = 4;
-    ConsumeRequest consumer_req = 5;
-    string global_notification = 6;
+    ConnectTransportRequest connect_transport_req =4;
+    ProduceRequest produce_req = 5;
+    ConsumeRequest consumer_req = 6;
+    string global_notification = 7;
   }
 }
 
