@@ -28,21 +28,23 @@ type WsNotification struct {
 }
 
 type User struct {
-	userId      string
-	peerId      string
-	displayName string
-	createTs    int64
-	wsConn      *websocket.Conn
-	wsServer    *WsServer
-	sendMsg     chan *WsResponse
-	roomId      string
+	userId        string
+	PeerId        string `json:"peerId"`
+	DisplayName   string `json:"displayName"`
+	createTs      int64
+	wsConn        *websocket.Conn
+	wsServer      *WsServer
+	sendMsg       chan *WsResponse
+	roomId        string
+	Device        Device `json:"device"`
+	RemoteAddress string `json:"remoteAddress"`
 }
 
 func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid string) *User {
 	return &User{
 		wsConn:   conn,
 		wsServer: server,
-		peerId:   peerid,
+		PeerId:   peerid,
 		roomId:   roomid,
 		createTs: time.Now().Unix(),
 		sendMsg:  make(chan *WsResponse),
@@ -143,6 +145,17 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 
 func (u *User) handleJoin(req *WsRequest) {
 	logger.Infof("recv join message")
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	otherUsers := room.GetOtherUsers(u)
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       true,
+		Data: &JoinResData{
+			Peers: otherUsers,
+		},
+	}
+	u.sendMsg <- response
 }
 
 func (u *User) handleProduceData(req *WsRequest) {

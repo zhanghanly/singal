@@ -25,13 +25,26 @@ func (r *Room) AddUser(user *User) {
 	if _, ok := r.users[user.userId]; !ok {
 		r.users[user.userId] = user
 
-		logger.Infof("add userId=%s peerId=%s to roomId=%s", user.userId, user.peerId, r.roomId)
+		logger.Infof("add userId=%s peerId=%s to roomId=%s", user.userId, user.PeerId, r.roomId)
 	}
 }
 
 func (r *Room) DeleteUser(user *User) {
 	delete(r.users, user.userId)
-	logger.Infof("delete userId=%s peerId=%s from roomId=%s", user.userId, user.peerId, r.roomId)
+	logger.Infof("delete userId=%s peerId=%s from roomId=%s", user.userId, user.PeerId, r.roomId)
+}
+
+func (r *Room) GetOtherUsers(user *User) []*User {
+	userLst := make([]*User, 0)
+	for k, v := range r.users {
+		if k == user.userId {
+			continue
+		}
+
+		userLst = append(userLst, v)
+	}
+
+	return userLst
 }
 
 func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransportResData, error) {

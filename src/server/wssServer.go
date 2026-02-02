@@ -39,7 +39,7 @@ func (w *WsServer) Run() {
 			w.Users[user] = true
 			room := gRoomManager.GetOrCreateRoom(user.roomId)
 			room.AddUser(user)
-			logger.Infof("userId=%s peerId=%s roomId=%s connected", user.userId, user.peerId, user.roomId)
+			logger.Infof("userId=%s peerId=%s roomId=%s connected", user.userId, user.PeerId, user.roomId)
 			//w.Broadcast <- joinMsg
 
 		case user := <-w.Unregister:
@@ -48,7 +48,7 @@ func (w *WsServer) Run() {
 				close(user.sendMsg)
 				room := gRoomManager.GetOrCreateRoom(user.roomId)
 				room.DeleteUser(user)
-				logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.peerId, user.roomId)
+				logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.PeerId, user.roomId)
 				//w.Broadcast <- leaveMsg
 			}
 

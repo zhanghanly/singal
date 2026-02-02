@@ -83,6 +83,10 @@ type JoinReqData struct {
 	RtpCapabilities RtpCapabilities `json:"rtpCapabilities"`
 }
 
+type JoinResData struct {
+	Peers []*User `json:"peers"`
+}
+
 type ConnectTransportReqData struct {
 	TransportId    string         `json:"transportId"`
 	DTLSParameters DTLSParameters `json:"dtlsParameters"`
