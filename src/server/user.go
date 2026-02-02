@@ -74,39 +74,83 @@ func (u *User) ReadMessage() {
 
 		switch wsReq.Method {
 		case "getRouterRtpCapabilities":
-			logger.Infof("recv getRouterRtpCapabilities message")
-			response := &WsResponse{
-				Id:       wsReq.Id,
-				Response: true,
-				Ok:       true,
-				Data:     gConfig,
-			}
-			u.sendMsg <- response
+			u.handleGetRouterRtpCapabilities(&wsReq)
 
 		case "createWebRtcTransport":
-			logger.Infof("recv createWebRtcTransport message")
-			//u.sendMsg <- response
+			u.handleCreateWebrtcTransport(&wsReq)
 
 		case "connectWebRtcTransport":
-			logger.Infof("recv connectWebRtcTransport message")
-			//u.wsServer.Broadcast <- msg
+			u.handleConnectWebrtcTransport(&wsReq)
 
 		case "join":
-			logger.Infof("recv join message")
-			//u.wsServer.Broadcast <- msg
+			u.handleJoin(&wsReq)
 
 		case "produceData":
-			logger.Infof("recv produceData message")
-			//u.wsServer.Broadcast <- msg
+			u.handleProduceData(&wsReq)
 
 		case "produce":
-			logger.Infof("recv produce message")
-			//u.wsServer.Broadcast <- msg
+			u.handleProduce(&wsReq)
 
 		default:
 			logger.Infof("unknown message type:")
 		}
 	}
+}
+
+func (u *User) handleGetRouterRtpCapabilities(req *WsRequest) {
+	logger.Infof("recv getRouterRtpCapabilities message")
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       true,
+		Data:     gConfig,
+	}
+	u.sendMsg <- response
+}
+
+func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
+	logger.Infof("recv createWebRtcTransport message")
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	reqData := req.Data.(CreateTransportReqData)
+	resData, err := room.CreateWebrtcTransport(&reqData)
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       false,
+	}
+	if err == nil {
+		response.Ok = true
+		response.Data = resData
+	}
+	u.sendMsg <- response
+}
+
+func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
+	logger.Infof("recv connectWebRtcTransport message")
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	reqData := req.Data.(ConnectTransportReqData)
+	err := room.ConnectWebrtcTransport(&reqData)
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       false,
+	}
+	if err == nil {
+		response.Ok = true
+	}
+	u.sendMsg <- response
+}
+
+func (u *User) handleJoin(req *WsRequest) {
+	logger.Infof("recv join message")
+}
+
+func (u *User) handleProduceData(req *WsRequest) {
+	logger.Infof("recv produceData message")
+}
+
+func (u *User) handleProduce(req *WsRequest) {
+	logger.Infof("recv produce message")
 }
 
 func (u *User) WriteMessage() {

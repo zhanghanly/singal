@@ -71,6 +71,6 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 	return transportResData, nil
 }
 
-func (r *Room) ConnectWebrtcTransport(user *User) {
-
+func (r *Room) ConnectWebrtcTransport(req *ConnectTransportReqData) error {
+	return gRtcServer.ConnectWebrtcTransport(r.router, req)
 }
