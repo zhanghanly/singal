@@ -93,10 +93,48 @@ enum MediaKind {
   MEDIA_KIND_VIDEO = 1;
 }
 
+message RtcpFeedback {
+  string type = 1;
+  string parameter = 2;
+} 
+
+message Codec {
+  string mimeType = 1;
+  uint32 payloadType = 2;
+  uint32 clockRate = 3;
+  string parameters = 4;
+  repeated RtcpFeedback rtcpFeedbacks = 5;
+}
+
+message HeadExtension {
+   string uri = 1;
+   uint32 id = 2;
+   bool encrypt = 3;
+   string parameters =4;
+}
+
+message Encoding {
+  bool active = 1;
+  string scalabilityMode = 2;
+  uint32 scaleResolutionDownBy = 3;
+  uint32 maxBitrate = 4;
+  string rid = 5;
+  bool dtx = 6;
+}
+
+message RtpParameters {
+  string mid = 1;
+  string msid = 2;
+  repeated Codec codecs = 3;
+  repeated HeadExtension headExtensions = 4;
+  repeated Encoding encodings = 5;
+}
+
 message ProduceRequest {
   string transport_id = 1;
   MediaKind kind = 2;
   string app_data = 3;
+  RtpParameters rtpParameters = 4;
 }
 
 message ProduceResponse {

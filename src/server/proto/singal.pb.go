@@ -851,18 +851,375 @@ func (x *ConnectTransportResponse) GetErrorDetail() string {
 	return ""
 }
 
+type RtcpFeedback struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Parameter     string                 `protobuf:"bytes,2,opt,name=parameter,proto3" json:"parameter,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RtcpFeedback) Reset() {
+	*x = RtcpFeedback{}
+	mi := &file_singal_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RtcpFeedback) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RtcpFeedback) ProtoMessage() {}
+
+func (x *RtcpFeedback) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RtcpFeedback.ProtoReflect.Descriptor instead.
+func (*RtcpFeedback) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *RtcpFeedback) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *RtcpFeedback) GetParameter() string {
+	if x != nil {
+		return x.Parameter
+	}
+	return ""
+}
+
+type Codec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MimeType      string                 `protobuf:"bytes,1,opt,name=mimeType,proto3" json:"mimeType,omitempty"`
+	PayloadType   uint32                 `protobuf:"varint,2,opt,name=payloadType,proto3" json:"payloadType,omitempty"`
+	ClockRate     uint32                 `protobuf:"varint,3,opt,name=clockRate,proto3" json:"clockRate,omitempty"`
+	Parameters    string                 `protobuf:"bytes,4,opt,name=parameters,proto3" json:"parameters,omitempty"`
+	RtcpFeedbacks []*RtcpFeedback        `protobuf:"bytes,5,rep,name=rtcpFeedbacks,proto3" json:"rtcpFeedbacks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Codec) Reset() {
+	*x = Codec{}
+	mi := &file_singal_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Codec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Codec) ProtoMessage() {}
+
+func (x *Codec) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Codec.ProtoReflect.Descriptor instead.
+func (*Codec) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Codec) GetMimeType() string {
+	if x != nil {
+		return x.MimeType
+	}
+	return ""
+}
+
+func (x *Codec) GetPayloadType() uint32 {
+	if x != nil {
+		return x.PayloadType
+	}
+	return 0
+}
+
+func (x *Codec) GetClockRate() uint32 {
+	if x != nil {
+		return x.ClockRate
+	}
+	return 0
+}
+
+func (x *Codec) GetParameters() string {
+	if x != nil {
+		return x.Parameters
+	}
+	return ""
+}
+
+func (x *Codec) GetRtcpFeedbacks() []*RtcpFeedback {
+	if x != nil {
+		return x.RtcpFeedbacks
+	}
+	return nil
+}
+
+type HeadExtension struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uri           string                 `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
+	Id            uint32                 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Encrypt       bool                   `protobuf:"varint,3,opt,name=encrypt,proto3" json:"encrypt,omitempty"`
+	Parameters    string                 `protobuf:"bytes,4,opt,name=parameters,proto3" json:"parameters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HeadExtension) Reset() {
+	*x = HeadExtension{}
+	mi := &file_singal_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HeadExtension) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeadExtension) ProtoMessage() {}
+
+func (x *HeadExtension) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeadExtension.ProtoReflect.Descriptor instead.
+func (*HeadExtension) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *HeadExtension) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
+func (x *HeadExtension) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *HeadExtension) GetEncrypt() bool {
+	if x != nil {
+		return x.Encrypt
+	}
+	return false
+}
+
+func (x *HeadExtension) GetParameters() string {
+	if x != nil {
+		return x.Parameters
+	}
+	return ""
+}
+
+type Encoding struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Active                bool                   `protobuf:"varint,1,opt,name=active,proto3" json:"active,omitempty"`
+	ScalabilityMode       string                 `protobuf:"bytes,2,opt,name=scalabilityMode,proto3" json:"scalabilityMode,omitempty"`
+	ScaleResolutionDownBy uint32                 `protobuf:"varint,3,opt,name=scaleResolutionDownBy,proto3" json:"scaleResolutionDownBy,omitempty"`
+	MaxBitrate            uint32                 `protobuf:"varint,4,opt,name=maxBitrate,proto3" json:"maxBitrate,omitempty"`
+	Rid                   string                 `protobuf:"bytes,5,opt,name=rid,proto3" json:"rid,omitempty"`
+	Dtx                   bool                   `protobuf:"varint,6,opt,name=dtx,proto3" json:"dtx,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *Encoding) Reset() {
+	*x = Encoding{}
+	mi := &file_singal_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Encoding) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Encoding) ProtoMessage() {}
+
+func (x *Encoding) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Encoding.ProtoReflect.Descriptor instead.
+func (*Encoding) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Encoding) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *Encoding) GetScalabilityMode() string {
+	if x != nil {
+		return x.ScalabilityMode
+	}
+	return ""
+}
+
+func (x *Encoding) GetScaleResolutionDownBy() uint32 {
+	if x != nil {
+		return x.ScaleResolutionDownBy
+	}
+	return 0
+}
+
+func (x *Encoding) GetMaxBitrate() uint32 {
+	if x != nil {
+		return x.MaxBitrate
+	}
+	return 0
+}
+
+func (x *Encoding) GetRid() string {
+	if x != nil {
+		return x.Rid
+	}
+	return ""
+}
+
+func (x *Encoding) GetDtx() bool {
+	if x != nil {
+		return x.Dtx
+	}
+	return false
+}
+
+type RtpParameters struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Mid            string                 `protobuf:"bytes,1,opt,name=mid,proto3" json:"mid,omitempty"`
+	Msid           string                 `protobuf:"bytes,2,opt,name=msid,proto3" json:"msid,omitempty"`
+	Codecs         []*Codec               `protobuf:"bytes,3,rep,name=codecs,proto3" json:"codecs,omitempty"`
+	HeadExtensions []*HeadExtension       `protobuf:"bytes,4,rep,name=headExtensions,proto3" json:"headExtensions,omitempty"`
+	Encodings      []*Encoding            `protobuf:"bytes,5,rep,name=encodings,proto3" json:"encodings,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RtpParameters) Reset() {
+	*x = RtpParameters{}
+	mi := &file_singal_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RtpParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RtpParameters) ProtoMessage() {}
+
+func (x *RtpParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RtpParameters.ProtoReflect.Descriptor instead.
+func (*RtpParameters) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RtpParameters) GetMid() string {
+	if x != nil {
+		return x.Mid
+	}
+	return ""
+}
+
+func (x *RtpParameters) GetMsid() string {
+	if x != nil {
+		return x.Msid
+	}
+	return ""
+}
+
+func (x *RtpParameters) GetCodecs() []*Codec {
+	if x != nil {
+		return x.Codecs
+	}
+	return nil
+}
+
+func (x *RtpParameters) GetHeadExtensions() []*HeadExtension {
+	if x != nil {
+		return x.HeadExtensions
+	}
+	return nil
+}
+
+func (x *RtpParameters) GetEncodings() []*Encoding {
+	if x != nil {
+		return x.Encodings
+	}
+	return nil
+}
+
 type ProduceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TransportId   string                 `protobuf:"bytes,1,opt,name=transport_id,json=transportId,proto3" json:"transport_id,omitempty"`
 	Kind          MediaKind              `protobuf:"varint,2,opt,name=kind,proto3,enum=server.MediaKind" json:"kind,omitempty"`
 	AppData       string                 `protobuf:"bytes,3,opt,name=app_data,json=appData,proto3" json:"app_data,omitempty"`
+	RtpParameters *RtpParameters         `protobuf:"bytes,4,opt,name=rtpParameters,proto3" json:"rtpParameters,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ProduceRequest) Reset() {
 	*x = ProduceRequest{}
-	mi := &file_singal_proto_msgTypes[9]
+	mi := &file_singal_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -874,7 +1231,7 @@ func (x *ProduceRequest) String() string {
 func (*ProduceRequest) ProtoMessage() {}
 
 func (x *ProduceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[9]
+	mi := &file_singal_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -887,7 +1244,7 @@ func (x *ProduceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProduceRequest.ProtoReflect.Descriptor instead.
 func (*ProduceRequest) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{9}
+	return file_singal_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ProduceRequest) GetTransportId() string {
@@ -911,6 +1268,13 @@ func (x *ProduceRequest) GetAppData() string {
 	return ""
 }
 
+func (x *ProduceRequest) GetRtpParameters() *RtpParameters {
+	if x != nil {
+		return x.RtpParameters
+	}
+	return nil
+}
+
 type ProduceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProducerId    string                 `protobuf:"bytes,1,opt,name=producer_id,json=producerId,proto3" json:"producer_id,omitempty"`
@@ -922,7 +1286,7 @@ type ProduceResponse struct {
 
 func (x *ProduceResponse) Reset() {
 	*x = ProduceResponse{}
-	mi := &file_singal_proto_msgTypes[10]
+	mi := &file_singal_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -934,7 +1298,7 @@ func (x *ProduceResponse) String() string {
 func (*ProduceResponse) ProtoMessage() {}
 
 func (x *ProduceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[10]
+	mi := &file_singal_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -947,7 +1311,7 @@ func (x *ProduceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProduceResponse.ProtoReflect.Descriptor instead.
 func (*ProduceResponse) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{10}
+	return file_singal_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ProduceResponse) GetProducerId() string {
@@ -981,7 +1345,7 @@ type ConsumeRequest struct {
 
 func (x *ConsumeRequest) Reset() {
 	*x = ConsumeRequest{}
-	mi := &file_singal_proto_msgTypes[11]
+	mi := &file_singal_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -993,7 +1357,7 @@ func (x *ConsumeRequest) String() string {
 func (*ConsumeRequest) ProtoMessage() {}
 
 func (x *ConsumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[11]
+	mi := &file_singal_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1006,7 +1370,7 @@ func (x *ConsumeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsumeRequest.ProtoReflect.Descriptor instead.
 func (*ConsumeRequest) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{11}
+	return file_singal_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ConsumeRequest) GetTransportId() string {
@@ -1036,7 +1400,7 @@ type ConsumeResponse struct {
 
 func (x *ConsumeResponse) Reset() {
 	*x = ConsumeResponse{}
-	mi := &file_singal_proto_msgTypes[12]
+	mi := &file_singal_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1048,7 +1412,7 @@ func (x *ConsumeResponse) String() string {
 func (*ConsumeResponse) ProtoMessage() {}
 
 func (x *ConsumeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[12]
+	mi := &file_singal_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1061,7 +1425,7 @@ func (x *ConsumeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsumeResponse.ProtoReflect.Descriptor instead.
 func (*ConsumeResponse) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{12}
+	return file_singal_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ConsumeResponse) GetConsumerId() string {
@@ -1117,7 +1481,7 @@ type WorkerToServer struct {
 
 func (x *WorkerToServer) Reset() {
 	*x = WorkerToServer{}
-	mi := &file_singal_proto_msgTypes[13]
+	mi := &file_singal_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1129,7 +1493,7 @@ func (x *WorkerToServer) String() string {
 func (*WorkerToServer) ProtoMessage() {}
 
 func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[13]
+	mi := &file_singal_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1142,7 +1506,7 @@ func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerToServer.ProtoReflect.Descriptor instead.
 func (*WorkerToServer) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{13}
+	return file_singal_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *WorkerToServer) GetSeqId() uint64 {
@@ -1271,7 +1635,7 @@ type ServerToWorker struct {
 
 func (x *ServerToWorker) Reset() {
 	*x = ServerToWorker{}
-	mi := &file_singal_proto_msgTypes[14]
+	mi := &file_singal_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1283,7 +1647,7 @@ func (x *ServerToWorker) String() string {
 func (*ServerToWorker) ProtoMessage() {}
 
 func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[14]
+	mi := &file_singal_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1296,7 +1660,7 @@ func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerToWorker.ProtoReflect.Descriptor instead.
 func (*ServerToWorker) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{14}
+	return file_singal_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ServerToWorker) GetSeqId() uint64 {
@@ -1479,11 +1843,45 @@ const file_singal_proto_rawDesc = "" +
 	"\x18ConnectTransportResponse\x12!\n" +
 	"\ftransport_id\x18\x01 \x01(\tR\vtransportId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
-	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"u\n" +
+	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"@\n" +
+	"\fRtcpFeedback\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x1c\n" +
+	"\tparameter\x18\x02 \x01(\tR\tparameter\"\xbf\x01\n" +
+	"\x05Codec\x12\x1a\n" +
+	"\bmimeType\x18\x01 \x01(\tR\bmimeType\x12 \n" +
+	"\vpayloadType\x18\x02 \x01(\rR\vpayloadType\x12\x1c\n" +
+	"\tclockRate\x18\x03 \x01(\rR\tclockRate\x12\x1e\n" +
+	"\n" +
+	"parameters\x18\x04 \x01(\tR\n" +
+	"parameters\x12:\n" +
+	"\rrtcpFeedbacks\x18\x05 \x03(\v2\x14.server.RtcpFeedbackR\rrtcpFeedbacks\"k\n" +
+	"\rHeadExtension\x12\x10\n" +
+	"\x03uri\x18\x01 \x01(\tR\x03uri\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\rR\x02id\x12\x18\n" +
+	"\aencrypt\x18\x03 \x01(\bR\aencrypt\x12\x1e\n" +
+	"\n" +
+	"parameters\x18\x04 \x01(\tR\n" +
+	"parameters\"\xc6\x01\n" +
+	"\bEncoding\x12\x16\n" +
+	"\x06active\x18\x01 \x01(\bR\x06active\x12(\n" +
+	"\x0fscalabilityMode\x18\x02 \x01(\tR\x0fscalabilityMode\x124\n" +
+	"\x15scaleResolutionDownBy\x18\x03 \x01(\rR\x15scaleResolutionDownBy\x12\x1e\n" +
+	"\n" +
+	"maxBitrate\x18\x04 \x01(\rR\n" +
+	"maxBitrate\x12\x10\n" +
+	"\x03rid\x18\x05 \x01(\tR\x03rid\x12\x10\n" +
+	"\x03dtx\x18\x06 \x01(\bR\x03dtx\"\xcb\x01\n" +
+	"\rRtpParameters\x12\x10\n" +
+	"\x03mid\x18\x01 \x01(\tR\x03mid\x12\x12\n" +
+	"\x04msid\x18\x02 \x01(\tR\x04msid\x12%\n" +
+	"\x06codecs\x18\x03 \x03(\v2\r.server.CodecR\x06codecs\x12=\n" +
+	"\x0eheadExtensions\x18\x04 \x03(\v2\x15.server.HeadExtensionR\x0eheadExtensions\x12.\n" +
+	"\tencodings\x18\x05 \x03(\v2\x10.server.EncodingR\tencodings\"\xb2\x01\n" +
 	"\x0eProduceRequest\x12!\n" +
 	"\ftransport_id\x18\x01 \x01(\tR\vtransportId\x12%\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x11.server.MediaKindR\x04kind\x12\x19\n" +
-	"\bapp_data\x18\x03 \x01(\tR\aappData\"o\n" +
+	"\bapp_data\x18\x03 \x01(\tR\aappData\x12;\n" +
+	"\rrtpParameters\x18\x04 \x01(\v2\x15.server.RtpParametersR\rrtpParameters\"o\n" +
 	"\x0fProduceResponse\x12\x1f\n" +
 	"\vproducer_id\x18\x01 \x01(\tR\n" +
 	"producerId\x12\x18\n" +
@@ -1546,7 +1944,7 @@ func file_singal_proto_rawDescGZIP() []byte {
 }
 
 var file_singal_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_singal_proto_goTypes = []any{
 	(TransportDirection)(0),          // 0: server.TransportDirection
 	(MediaKind)(0),                   // 1: server.MediaKind
@@ -1559,12 +1957,17 @@ var file_singal_proto_goTypes = []any{
 	(*CreateTransportResponse)(nil),  // 8: server.CreateTransportResponse
 	(*ConnectTransportRequest)(nil),  // 9: server.ConnectTransportRequest
 	(*ConnectTransportResponse)(nil), // 10: server.ConnectTransportResponse
-	(*ProduceRequest)(nil),           // 11: server.ProduceRequest
-	(*ProduceResponse)(nil),          // 12: server.ProduceResponse
-	(*ConsumeRequest)(nil),           // 13: server.ConsumeRequest
-	(*ConsumeResponse)(nil),          // 14: server.ConsumeResponse
-	(*WorkerToServer)(nil),           // 15: server.WorkerToServer
-	(*ServerToWorker)(nil),           // 16: server.ServerToWorker
+	(*RtcpFeedback)(nil),             // 11: server.RtcpFeedback
+	(*Codec)(nil),                    // 12: server.Codec
+	(*HeadExtension)(nil),            // 13: server.HeadExtension
+	(*Encoding)(nil),                 // 14: server.Encoding
+	(*RtpParameters)(nil),            // 15: server.RtpParameters
+	(*ProduceRequest)(nil),           // 16: server.ProduceRequest
+	(*ProduceResponse)(nil),          // 17: server.ProduceResponse
+	(*ConsumeRequest)(nil),           // 18: server.ConsumeRequest
+	(*ConsumeResponse)(nil),          // 19: server.ConsumeResponse
+	(*WorkerToServer)(nil),           // 20: server.WorkerToServer
+	(*ServerToWorker)(nil),           // 21: server.ServerToWorker
 }
 var file_singal_proto_depIdxs = []int32{
 	2,  // 0: server.CreateRouterRequest.info:type_name -> server.ListenInfo
@@ -1572,25 +1975,30 @@ var file_singal_proto_depIdxs = []int32{
 	6,  // 2: server.CreateTransportResponse.ice_candidates:type_name -> server.IceCandidate
 	5,  // 3: server.CreateTransportResponse.dtls_fingerprints:type_name -> server.DtlsFingerprint
 	5,  // 4: server.ConnectTransportRequest.dtls_fingerprints:type_name -> server.DtlsFingerprint
-	1,  // 5: server.ProduceRequest.kind:type_name -> server.MediaKind
-	1,  // 6: server.ConsumeResponse.kind:type_name -> server.MediaKind
-	4,  // 7: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
-	8,  // 8: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
-	10, // 9: server.WorkerToServer.connect_transport_res:type_name -> server.ConnectTransportResponse
-	12, // 10: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
-	14, // 11: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
-	3,  // 12: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
-	7,  // 13: server.ServerToWorker.create_transport_req:type_name -> server.CreateTransportRequest
-	9,  // 14: server.ServerToWorker.connect_transport_req:type_name -> server.ConnectTransportRequest
-	11, // 15: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest
-	13, // 16: server.ServerToWorker.consumer_req:type_name -> server.ConsumeRequest
-	15, // 17: server.WebRtcService.Sync:input_type -> server.WorkerToServer
-	16, // 18: server.WebRtcService.Sync:output_type -> server.ServerToWorker
-	18, // [18:19] is the sub-list for method output_type
-	17, // [17:18] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	11, // 5: server.Codec.rtcpFeedbacks:type_name -> server.RtcpFeedback
+	12, // 6: server.RtpParameters.codecs:type_name -> server.Codec
+	13, // 7: server.RtpParameters.headExtensions:type_name -> server.HeadExtension
+	14, // 8: server.RtpParameters.encodings:type_name -> server.Encoding
+	1,  // 9: server.ProduceRequest.kind:type_name -> server.MediaKind
+	15, // 10: server.ProduceRequest.rtpParameters:type_name -> server.RtpParameters
+	1,  // 11: server.ConsumeResponse.kind:type_name -> server.MediaKind
+	4,  // 12: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
+	8,  // 13: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
+	10, // 14: server.WorkerToServer.connect_transport_res:type_name -> server.ConnectTransportResponse
+	17, // 15: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
+	19, // 16: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
+	3,  // 17: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
+	7,  // 18: server.ServerToWorker.create_transport_req:type_name -> server.CreateTransportRequest
+	9,  // 19: server.ServerToWorker.connect_transport_req:type_name -> server.ConnectTransportRequest
+	16, // 20: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest
+	18, // 21: server.ServerToWorker.consumer_req:type_name -> server.ConsumeRequest
+	20, // 22: server.WebRtcService.Sync:input_type -> server.WorkerToServer
+	21, // 23: server.WebRtcService.Sync:output_type -> server.ServerToWorker
+	23, // [23:24] is the sub-list for method output_type
+	22, // [22:23] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_singal_proto_init() }
@@ -1598,7 +2006,7 @@ func file_singal_proto_init() {
 	if File_singal_proto != nil {
 		return
 	}
-	file_singal_proto_msgTypes[13].OneofWrappers = []any{
+	file_singal_proto_msgTypes[18].OneofWrappers = []any{
 		(*WorkerToServer_CreateRouterRes)(nil),
 		(*WorkerToServer_CreateTransportRes)(nil),
 		(*WorkerToServer_ConnectTransportRes)(nil),
@@ -1606,7 +2014,7 @@ func file_singal_proto_init() {
 		(*WorkerToServer_ConsumerRes)(nil),
 		(*WorkerToServer_StatsPush)(nil),
 	}
-	file_singal_proto_msgTypes[14].OneofWrappers = []any{
+	file_singal_proto_msgTypes[19].OneofWrappers = []any{
 		(*ServerToWorker_CreateRouterReq)(nil),
 		(*ServerToWorker_CreateTransportReq)(nil),
 		(*ServerToWorker_ConnectTransportReq)(nil),
@@ -1620,7 +2028,7 @@ func file_singal_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_singal_proto_rawDesc), len(file_singal_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   15,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
