@@ -32,8 +32,10 @@ func NewWebRtcServer() *WebRtcServer {
 }
 
 func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
+	logger.Infof("begin to recv grpc peer message")
 	firstReq, err := stream.Recv()
 	if err != nil {
+		logger.Infof("recv grpc peer message failed, %v", err)
 		return err
 	}
 	workerID := firstReq.SeqId
@@ -50,7 +52,7 @@ func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
-			logger.Infof("Worker %d disconnected: %v", workerID, err)
+			logger.Fatalf("Worker %d disconnected: %v", workerID, err)
 			return err
 		}
 
@@ -234,7 +236,7 @@ func StartGrpcServer() {
 	grpcServer := grpc.NewServer(
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			Time:    15 * time.Second,
-			Timeout: 5 * time.Second,
+			Timeout: 50 * time.Second,
 		}),
 	)
 
