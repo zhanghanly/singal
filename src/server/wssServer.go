@@ -38,18 +38,24 @@ func (w *WsServer) Run() {
 		case user := <-w.Register:
 			w.Users[user] = true
 			room := gRoomManager.GetOrCreateRoom(user.roomId)
-			room.AddUser(user)
-			logger.Infof("userId=%s peerId=%s roomId=%s connected", user.userId, user.PeerId, user.roomId)
-			//w.Broadcast <- joinMsg
+			if room != nil {
+				room.AddUser(user)
+				logger.Infof("userId=%s peerId=%s join roomId=%s successfully", user.userId, user.PeerId, user.roomId)
+				//w.Broadcast <- joinMsg
+			} else {
+				logger.Infof("userId=%s peerId=%s join roomId=%s failed", user.userId, user.PeerId, user.roomId)
+			}
 
 		case user := <-w.Unregister:
 			if _, ok := w.Users[user]; ok {
 				delete(w.Users, user)
 				close(user.sendMsg)
 				room := gRoomManager.GetOrCreateRoom(user.roomId)
-				room.DeleteUser(user)
-				logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.PeerId, user.roomId)
-				//w.Broadcast <- leaveMsg
+				if room != nil {
+					room.DeleteUser(user)
+					logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.PeerId, user.roomId)
+					//w.Broadcast <- leaveMsg
+				}
 			}
 
 			//case message := <-w.Broadcast:

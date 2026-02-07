@@ -112,17 +112,19 @@ func (u *User) handleGetRouterRtpCapabilities(req *WsRequest) {
 
 func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 	logger.Infof("recv createWebRtcTransport message")
-	room := gRoomManager.GetOrCreateRoom(u.roomId)
-	reqData := req.Data.(CreateTransportReqData)
-	resData, err := room.CreateWebrtcTransport(&reqData)
 	response := &WsResponse{
 		Id:       req.Id,
 		Response: true,
 		Ok:       false,
 	}
-	if err == nil {
-		response.Ok = true
-		response.Data = resData
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	if room != nil {
+		reqData := req.Data.(CreateTransportReqData)
+		resData, err := room.CreateWebrtcTransport(&reqData)
+		if err == nil {
+			response.Ok = true
+			response.Data = resData
+		}
 	}
 	u.sendMsg <- response
 }

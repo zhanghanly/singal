@@ -16,7 +16,7 @@ func (rm *RoomManager) GetOrCreateRoom(roomId string) *Room {
 	if _, ok := rm.rooms[roomId]; !ok {
 		router, err := gRtcServer.CreateRouterOnWorker()
 		if err != nil {
-			logger.Fatalln("create router failed")
+			logger.Errorf("create router failed, reason=%v", err)
 			return nil
 		}
 		rm.rooms[roomId] = NewRoom(roomId, router)
