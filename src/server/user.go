@@ -119,11 +119,22 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 	}
 	room := gRoomManager.GetOrCreateRoom(u.roomId)
 	if room != nil {
-		reqData := req.Data.(CreateTransportReqData)
-		resData, err := room.CreateWebrtcTransport(&reqData)
+		logger.Infof("before Marshal")
+		reqDataBytes, err := json.Marshal(req.Data)
 		if err == nil {
-			response.Ok = true
-			response.Data = resData
+			logger.Infof("after Marshal")
+			var reqData CreateTransportReqData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				logger.Infof("after Unmarshal, %s", reqData.AppData.Direction)
+				resData, err := room.CreateWebrtcTransport(&reqData)
+				if err == nil {
+					response.Ok = true
+					response.Data = resData
+				} else {
+					logger.Errorf("create webrtc transport failed, reason=%v", err)
+				}
+			}
 		}
 	}
 	u.sendMsg <- response
