@@ -52,7 +52,7 @@ func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
-			logger.Fatalf("Worker %d disconnected: %v", workerID, err)
+			logger.Errorf("Worker %d disconnected: %v", workerID, err)
 			return err
 		}
 
@@ -230,7 +230,7 @@ func (s *WebRtcServer) chooseBestWorker() string {
 func StartGrpcServer() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		logger.Fatalf("failed to listen: %v", err)
+		logger.Errorf("failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer(
@@ -245,6 +245,6 @@ func StartGrpcServer() {
 
 	logger.Infoln("gRPC WebRTC Server running on :50051...")
 	if err := grpcServer.Serve(lis); err != nil {
-		logger.Fatalf("failed to serve: %v", err)
+		logger.Errorf("failed to serve: %v", err)
 	}
 }

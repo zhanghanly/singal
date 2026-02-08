@@ -85,7 +85,7 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(rw, r, nil)
 	if err != nil {
-		logger.Fatal("WebSocket upgrade failed: ", err)
+		logger.Errorf("WebSocket upgrade failed: reason=%v", err)
 		return
 	}
 	logger.Infof("accept wbsocket connection")
