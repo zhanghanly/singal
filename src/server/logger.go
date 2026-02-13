@@ -45,7 +45,7 @@ func InitLogger() {
 	logger.SetReportCaller(true)
 	logger.SetLevel(logrus.DebugLevel)
 	logger.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:04:05",
+		TimestampFormat: "2006-01-02 15:04:05.000",
 	})
 }
 
