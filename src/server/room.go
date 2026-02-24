@@ -50,6 +50,7 @@ func (r *Room) GetOtherUsers(user *User) []*User {
 func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransportResData, error) {
 	res, err := gRtcServer.CreateWebrtcTransport(r.router)
 	if err != nil {
+		logger.Errorf("grpc CreateWebrtcTransport failed, reason=%v", err)
 		return nil, errors.New("not res from peer")
 	}
 
@@ -60,6 +61,31 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 			Password:         res.IcePwd,
 			ICELite:          true,
 		},
+		ICECandidates: make([]ICECandidate, 0),
+		DTLSParameters: DTLSParameters{
+			Role:         "auto",
+			Fingerprints: make([]Fingerprint, 0),
+		},
+	}
+
+	for _, v := range res.IceCandidates {
+		candidate := ICECandidate{
+			Foundation: v.Foundation,
+			Priority:   int(v.Priority),
+			IP:         v.Ip,
+			Protocol:   v.Protocol,
+			Port:       int(v.Port),
+		}
+
+		transportResData.ICECandidates = append(transportResData.ICECandidates, candidate)
+	}
+	for _, v := range res.DtlsFingerprints {
+		fingerprint := Fingerprint{
+			Algorithm: v.Algorithm,
+			Value:     v.Value,
+		}
+
+		transportResData.DTLSParameters.Fingerprints = append(transportResData.DTLSParameters.Fingerprints, fingerprint)
 	}
 
 	switch req.AppData.Direction {
