@@ -119,14 +119,11 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 	}
 	room := gRoomManager.GetOrCreateRoom(u.roomId)
 	if room != nil {
-		logger.Infof("before Marshal")
 		reqDataBytes, err := json.Marshal(req.Data)
 		if err == nil {
-			logger.Infof("after Marshal")
 			var reqData CreateTransportReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				logger.Infof("after Unmarshal, %s", reqData.AppData.Direction)
 				resData, err := room.CreateWebrtcTransport(&reqData)
 				if err == nil {
 					response.Ok = true
@@ -142,17 +139,31 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 
 func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 	logger.Infof("recv connectWebRtcTransport message")
-	room := gRoomManager.GetOrCreateRoom(u.roomId)
-	reqData := req.Data.(ConnectTransportReqData)
-	err := room.ConnectWebrtcTransport(&reqData)
 	response := &WsResponse{
 		Id:       req.Id,
 		Response: true,
 		Ok:       false,
 	}
-	if err == nil {
-		response.Ok = true
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	if room != nil {
+		reqDataBytes, err := json.Marshal(req.Data)
+		if err == nil {
+			var reqData ConnectTransportReqData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				err := room.ConnectWebrtcTransport(&reqData)
+				if err == nil {
+					response.Ok = true
+				} else {
+					logger.Errorf("connect webrtc transport failed, reason=%v", err)
+				}
+			} else {
+				logger.Errorf("transform ConnectTransportReqData failed, reason=%v", err)
+			}
+
+		}
 	}
+
 	u.sendMsg <- response
 }
 
@@ -173,10 +184,67 @@ func (u *User) handleJoin(req *WsRequest) {
 
 func (u *User) handleProduceData(req *WsRequest) {
 	logger.Infof("recv produceData message")
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       false,
+	}
+
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	if room != nil {
+		reqDataBytes, err := json.Marshal(req.Data)
+		if err == nil {
+			var reqData ProduceDataReqData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				//err := room.ConnectWebrtcTransport(&reqData)
+				//if err == nil {
+				response.Ok = true
+				//} else {
+				//	logger.Errorf("produce data req failed, reason=%v", err)
+				//}
+				response.Data = &ProduceDataResData{
+					DataProducerId: RandString(12),
+				}
+			} else {
+				logger.Errorf("transform ProduceDataReqData failed, reason=%v", err)
+			}
+
+		}
+	}
+
+	u.sendMsg <- response
 }
 
 func (u *User) handleProduce(req *WsRequest) {
 	logger.Infof("recv produce message")
+	response := &WsResponse{
+		Id:       req.Id,
+		Response: true,
+		Ok:       true,
+	}
+
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	if room != nil {
+		reqDataBytes, err := json.Marshal(req.Data)
+		if err == nil {
+			var reqData ProduceReqData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				err := room.Produce(&reqData)
+				if err == nil {
+					response.Ok = true
+				} else {
+					logger.Errorf("produce req failed, reason=%v", err)
+				}
+			} else {
+				logger.Errorf("transform ProduceReqData failed, reason=%v", err)
+			}
+
+		}
+	}
+
+	u.sendMsg <- response
 }
 
 func (u *User) WriteMessage() {
@@ -191,7 +259,7 @@ func (u *User) WriteMessage() {
 			logger.Info("failed to transform rtpCapabilities to json")
 			continue
 		}
-		logger.Infof("send response to client")
+		logger.Infof("send response=%s to client", jsonData)
 
 		if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
 			logger.Infof("write message failed: %v", err)

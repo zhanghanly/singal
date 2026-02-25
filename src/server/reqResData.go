@@ -104,6 +104,10 @@ type ProduceDataReqData struct {
 	AppData              AppData              `json:"appData"`
 }
 
+type ProduceDataResData struct {
+	DataProducerId string `json:"dataProducerId"`
+}
+
 type NewDataConsumerReqData struct {
 	TransportId          string               `json:"transportId"`
 	DataProducerId       string               `json:"dataProducerId"`
@@ -136,4 +140,8 @@ type ProduceReqData struct {
 	Encodings        []Encodings       `json:"encodings"`
 	Rtcp             Rtcp              `json:"rtcp"`
 	Msid             string            `json:"msid"`
+}
+
+type ProduceResData struct {
+	ProducerId string `json:"producerId"`
 }
