@@ -105,7 +105,7 @@ type ProduceDataReqData struct {
 }
 
 type ProduceDataResData struct {
-	DataProducerId string `json:"dataProducerId"`
+	DataProducerId string `json:"dataProducerId,omitempty"`
 }
 
 type NewDataConsumerReqData struct {

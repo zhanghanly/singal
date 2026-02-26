@@ -47,7 +47,7 @@ func (r *Room) GetOtherUsers(user *User) []*User {
 	return userLst
 }
 
-func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransportResData, error) {
+func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData, u *User) (*CreateTransportResData, error) {
 	res, err := gRtcServer.CreateWebrtcTransport(r.router)
 	if err != nil {
 		logger.Errorf("grpc CreateWebrtcTransport failed, reason=%v", err)
@@ -66,6 +66,15 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 			Role:         "auto",
 			Fingerprints: make([]Fingerprint, 0),
 		},
+		SCTPParameters: SCTPParameters{
+			Port:               5000,
+			OS:                 1024,
+			MIS:                1024,
+			MaxMessageSize:     262144,
+			SendBufferSize:     262144,
+			SCTPBufferedAmount: 0,
+			IsDataChannel:      true,
+		},
 	}
 
 	for _, v := range res.IceCandidates {
@@ -73,8 +82,10 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 			Foundation: v.Foundation,
 			Priority:   int(v.Priority),
 			IP:         v.Ip,
+			Address:    v.Ip,
 			Protocol:   v.Protocol,
 			Port:       int(v.Port),
+			Type:       "host",
 		}
 
 		transportResData.ICECandidates = append(transportResData.ICECandidates, candidate)
@@ -91,17 +102,19 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 	switch req.AppData.Direction {
 	case "producer":
 		producer := &Producer{
-			id:          RandString(12),
+			id:          u.userId,
 			transportId: res.TransportId,
 		}
 		r.router.addProducer(producer)
+		logger.Infof("add producer=%v", producer)
 
 	case "consumer":
 		consumer := &Consumer{
-			id:          RandString(12),
+			id:          u.userId,
 			transportId: res.TransportId,
 		}
 		r.router.addConsumer(consumer)
+		logger.Infof("add consumer=%v", consumer)
 
 	default:
 		return nil, errors.New("bad AppData direction")
@@ -110,6 +123,30 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData) (*CreateTransp
 	return transportResData, nil
 }
 
+func (r *Room) CreateNewDataConsumer(u *User, transportId string) *NewDataConsumerReqData {
+	if r.router.getConsumerTransportId(u.userId) == transportId {
+		return nil
+	}
+
+	return &NewDataConsumerReqData{
+		TransportId:    r.router.getConsumerTransportId(u.userId),
+		DataProducerId: RandString(12),
+		DataConsumerId: RandString(12),
+		SCTPStreamParameters: SCTPStreamParameters{
+			StreamId: 0,
+			Orderd:   true,
+		},
+		Label: "bot",
+		AppData: AppData{
+			Channel: "bot",
+		},
+	}
+}
+
 func (r *Room) ConnectWebrtcTransport(req *ConnectTransportReqData) error {
 	return gRtcServer.ConnectWebrtcTransport(r.router, req)
+}
+
+func (r *Room) Produce(req *ProduceReqData) error {
+	return nil
 }

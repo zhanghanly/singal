@@ -59,6 +59,17 @@ func (r *Router) addConsumer(consumer *Consumer) {
 	}
 }
 
+func (r *Router) getConsumerTransportId(userId string) string {
+	logger.Infof("consumer size=%d", len(r.consumers))
+	for _, v := range r.consumers {
+		if v.id == userId {
+			return v.transportId
+		}
+	}
+
+	return ""
+}
+
 type Worker struct {
 	workerId      string
 	publicIp      string
@@ -79,8 +90,8 @@ func (w *Worker) CreateRouter() *Router {
 		sendBufSize:   1024,
 		recvBufSize:   1024,
 		workerId:      w.workerId,
-		producers:     make([]*Producer, 2),
-		consumers:     make([]*Consumer, 2),
+		producers:     make([]*Producer, 0),
+		consumers:     make([]*Consumer, 0),
 	}
 
 	return router
