@@ -34,7 +34,8 @@ type User struct {
 	createTs      int64
 	wsConn        *websocket.Conn
 	wsServer      *WsServer
-	sendMsg       chan *WsResponse
+	sendResMsg    chan *WsResponse
+	sendReqMsg    chan *WsRequest
 	roomId        string
 	Device        Device `json:"device"`
 	RemoteAddress string `json:"remoteAddress"`
@@ -42,12 +43,13 @@ type User struct {
 
 func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid string) *User {
 	return &User{
-		wsConn:   conn,
-		wsServer: server,
-		PeerId:   peerid,
-		roomId:   roomid,
-		createTs: time.Now().Unix(),
-		sendMsg:  make(chan *WsResponse),
+		wsConn:     conn,
+		wsServer:   server,
+		PeerId:     peerid,
+		roomId:     roomid,
+		createTs:   time.Now().Unix(),
+		sendResMsg: make(chan *WsResponse),
+		sendReqMsg: make(chan *WsRequest),
 	}
 }
 
@@ -107,7 +109,7 @@ func (u *User) handleGetRouterRtpCapabilities(req *WsRequest) {
 		Ok:       true,
 		Data:     gConfig,
 	}
-	u.sendMsg <- response
+	u.sendResMsg <- response
 }
 
 func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
@@ -124,7 +126,7 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 			var reqData CreateTransportReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				resData, err := room.CreateWebrtcTransport(&reqData)
+				resData, err := room.CreateWebrtcTransport(&reqData, u)
 				if err == nil {
 					response.Ok = true
 					response.Data = resData
@@ -134,7 +136,7 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 			}
 		}
 	}
-	u.sendMsg <- response
+	u.sendResMsg <- response
 }
 
 func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
@@ -151,9 +153,22 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 			var reqData ConnectTransportReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
+				newDataConsumerReqData := room.CreateNewDataConsumer(u, reqData.TransportId)
+				if newDataConsumerReqData != nil {
+					req := &WsRequest{
+						Request: true,
+						Id:      10086,
+						Method:  "newDataConsumer",
+						Data:    newDataConsumerReqData,
+					}
+
+					u.sendReqMsg <- req
+				}
+
 				err := room.ConnectWebrtcTransport(&reqData)
 				if err == nil {
 					response.Ok = true
+					response.Data = &ProduceDataResData{}
 				} else {
 					logger.Errorf("connect webrtc transport failed, reason=%v", err)
 				}
@@ -164,7 +179,7 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 		}
 	}
 
-	u.sendMsg <- response
+	u.sendResMsg <- response
 }
 
 func (u *User) handleJoin(req *WsRequest) {
@@ -179,7 +194,8 @@ func (u *User) handleJoin(req *WsRequest) {
 			Peers: otherUsers,
 		},
 	}
-	u.sendMsg <- response
+
+	u.sendResMsg <- response
 }
 
 func (u *User) handleProduceData(req *WsRequest) {
@@ -213,7 +229,7 @@ func (u *User) handleProduceData(req *WsRequest) {
 		}
 	}
 
-	u.sendMsg <- response
+	u.sendResMsg <- response
 }
 
 func (u *User) handleProduce(req *WsRequest) {
@@ -234,6 +250,9 @@ func (u *User) handleProduce(req *WsRequest) {
 				err := room.Produce(&reqData)
 				if err == nil {
 					response.Ok = true
+					response.Data = &ProduceResData{
+						ProducerId: RandString(12),
+					}
 				} else {
 					logger.Errorf("produce req failed, reason=%v", err)
 				}
@@ -244,7 +263,7 @@ func (u *User) handleProduce(req *WsRequest) {
 		}
 	}
 
-	u.sendMsg <- response
+	u.sendResMsg <- response
 }
 
 func (u *User) WriteMessage() {
@@ -253,17 +272,48 @@ func (u *User) WriteMessage() {
 		logger.Infof("close connection from write")
 	}()
 
-	for message := range u.sendMsg {
-		jsonData, err := json.Marshal(message)
-		if err != nil {
-			logger.Info("failed to transform rtpCapabilities to json")
-			continue
-		}
-		logger.Infof("send response=%s to client", jsonData)
+	//for message := range u.sendResMsg {
+	//	jsonData, err := json.Marshal(message)
+	//	if err != nil {
+	//		logger.Info("failed to transform rtpCapabilities to json")
+	//		continue
+	//	}
+	//	logger.Infof("send response=%s to client", jsonData)
 
-		if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
-			logger.Infof("write message failed: %v", err)
-			return
+	//	if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+	//		logger.Infof("write message failed: %v", err)
+	//		return
+	//	}
+	//}
+
+	for {
+		select {
+		case res := <-u.sendResMsg:
+			jsonData, err := json.Marshal(res)
+			if err != nil {
+				logger.Info("failed to transform rtpCapabilities to json")
+				continue
+			}
+			logger.Infof("send response=%s to client", jsonData)
+
+			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+				logger.Infof("write message failed: %v", err)
+				return
+			}
+
+		case req := <-u.sendReqMsg:
+			jsonData, err := json.Marshal(req)
+			if err != nil {
+				logger.Info("failed to transform rtpCapabilities to json")
+				continue
+			}
+			logger.Infof("send request=%s to client", jsonData)
+
+			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+				logger.Infof("write message failed: %v", err)
+				return
+			}
 		}
 	}
+
 }

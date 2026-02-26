@@ -49,7 +49,8 @@ func (w *WsServer) Run() {
 		case user := <-w.Unregister:
 			if _, ok := w.Users[user]; ok {
 				delete(w.Users, user)
-				close(user.sendMsg)
+				close(user.sendResMsg)
+				close(user.sendReqMsg)
 				room := gRoomManager.GetOrCreateRoom(user.roomId)
 				if room != nil {
 					room.DeleteUser(user)
