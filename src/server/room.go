@@ -34,14 +34,20 @@ func (r *Room) DeleteUser(user *User) {
 	logger.Infof("delete userId=%s peerId=%s from roomId=%s", user.userId, user.PeerId, r.roomId)
 }
 
-func (r *Room) GetOtherUsers(user *User) []*User {
-	userLst := make([]*User, 0)
+func (r *Room) GetOtherUsers(user *User) []*PeerData {
+	userLst := make([]*PeerData, 0)
 	for k, v := range r.users {
 		if k == user.userId {
 			continue
 		}
 
-		userLst = append(userLst, v)
+		peerData := &PeerData{
+			PeerId:        v.PeerId,
+			DisplayName:   v.DisplayName,
+			Device:        v.Device,
+			RemoteAddress: v.RemoteAddress,
+		}
+		userLst = append(userLst, peerData)
 	}
 
 	return userLst
@@ -54,10 +60,10 @@ func (r *Room) NotifyOtherUsers(user *User) {
 		}
 
 		peerData := &PeerData{
-			PeerId:        v.PeerId,
-			DisplayName:   v.DisplayName,
-			Device:        v.Device,
-			RemoteAddress: v.RemoteAddress,
+			PeerId:        user.PeerId,
+			DisplayName:   user.DisplayName,
+			Device:        user.Device,
+			RemoteAddress: user.RemoteAddress,
 		}
 		v.NotifyNewPeer(peerData)
 	}

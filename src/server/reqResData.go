@@ -84,7 +84,7 @@ type JoinReqData struct {
 }
 
 type JoinResData struct {
-	Peers []*User `json:"peers"`
+	Peers []*PeerData `json:"peers"`
 }
 
 type ConnectTransportReqData struct {

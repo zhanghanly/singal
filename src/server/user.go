@@ -28,8 +28,8 @@ type WsNotification struct {
 
 type User struct {
 	userId        string
-	PeerId        string `json:"peerId"`
-	DisplayName   string `json:"displayName"`
+	PeerId        string
+	DisplayName   string
 	createTs      int64
 	wsConn        *websocket.Conn
 	wsServer      *WsServer
@@ -37,8 +37,8 @@ type User struct {
 	sendReqMsg    chan *WsRequest
 	sendNotifyMsg chan *WsNotification
 	roomId        string
-	Device        Device `json:"device"`
-	RemoteAddress string `json:"remoteAddress"`
+	Device        Device
+	RemoteAddress string
 }
 
 func (u *User) ReadMessage() {
