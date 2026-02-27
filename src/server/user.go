@@ -2,7 +2,6 @@ package singal
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -36,21 +35,10 @@ type User struct {
 	wsServer      *WsServer
 	sendResMsg    chan *WsResponse
 	sendReqMsg    chan *WsRequest
+	sendNotifyMsg chan *WsNotification
 	roomId        string
 	Device        Device `json:"device"`
 	RemoteAddress string `json:"remoteAddress"`
-}
-
-func NewUser(conn *websocket.Conn, server *WsServer, peerid string, roomid string) *User {
-	return &User{
-		wsConn:     conn,
-		wsServer:   server,
-		PeerId:     peerid,
-		roomId:     roomid,
-		createTs:   time.Now().Unix(),
-		sendResMsg: make(chan *WsResponse),
-		sendReqMsg: make(chan *WsRequest),
-	}
 }
 
 func (u *User) ReadMessage() {
@@ -185,6 +173,8 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 func (u *User) handleJoin(req *WsRequest) {
 	logger.Infof("recv join message")
 	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	room.NotifyOtherUsers(u)
+
 	otherUsers := room.GetOtherUsers(u)
 	response := &WsResponse{
 		Id:       req.Id,
@@ -259,11 +249,20 @@ func (u *User) handleProduce(req *WsRequest) {
 			} else {
 				logger.Errorf("transform ProduceReqData failed, reason=%v", err)
 			}
-
 		}
 	}
 
 	u.sendResMsg <- response
+}
+
+func (u *User) NotifyNewPeer(peerData *PeerData) {
+	notify := &WsNotification{
+		Notification: true,
+		Method:       "newPeer",
+		Data:         peerData,
+	}
+
+	u.sendNotifyMsg <- notify
 }
 
 func (u *User) WriteMessage() {
@@ -272,26 +271,12 @@ func (u *User) WriteMessage() {
 		logger.Infof("close connection from write")
 	}()
 
-	//for message := range u.sendResMsg {
-	//	jsonData, err := json.Marshal(message)
-	//	if err != nil {
-	//		logger.Info("failed to transform rtpCapabilities to json")
-	//		continue
-	//	}
-	//	logger.Infof("send response=%s to client", jsonData)
-
-	//	if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
-	//		logger.Infof("write message failed: %v", err)
-	//		return
-	//	}
-	//}
-
 	for {
 		select {
 		case res := <-u.sendResMsg:
 			jsonData, err := json.Marshal(res)
 			if err != nil {
-				logger.Info("failed to transform rtpCapabilities to json")
+				logger.Info("failed to transform wsResponse to json")
 				continue
 			}
 			logger.Infof("send response=%s to client", jsonData)
@@ -304,7 +289,20 @@ func (u *User) WriteMessage() {
 		case req := <-u.sendReqMsg:
 			jsonData, err := json.Marshal(req)
 			if err != nil {
-				logger.Info("failed to transform rtpCapabilities to json")
+				logger.Info("failed to transform wsRequest to json")
+				continue
+			}
+			logger.Infof("send request=%s to client", jsonData)
+
+			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+				logger.Infof("write message failed: %v", err)
+				return
+			}
+
+		case notify := <-u.sendNotifyMsg:
+			jsonData, err := json.Marshal(notify)
+			if err != nil {
+				logger.Info("failed to transform wsNotification to json")
 				continue
 			}
 			logger.Infof("send request=%s to client", jsonData)

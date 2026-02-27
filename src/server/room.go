@@ -47,6 +47,22 @@ func (r *Room) GetOtherUsers(user *User) []*User {
 	return userLst
 }
 
+func (r *Room) NotifyOtherUsers(user *User) {
+	for k, v := range r.users {
+		if k == user.userId {
+			continue
+		}
+
+		peerData := &PeerData{
+			PeerId:        v.PeerId,
+			DisplayName:   v.DisplayName,
+			Device:        v.Device,
+			RemoteAddress: v.RemoteAddress,
+		}
+		v.NotifyNewPeer(peerData)
+	}
+}
+
 func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData, u *User) (*CreateTransportResData, error) {
 	res, err := gRtcServer.CreateWebrtcTransport(r.router)
 	if err != nil {

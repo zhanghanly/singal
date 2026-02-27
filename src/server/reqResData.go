@@ -145,3 +145,10 @@ type ProduceReqData struct {
 type ProduceResData struct {
 	ProducerId string `json:"producerId"`
 }
+
+type PeerData struct {
+	PeerId        string `json:"peerId"`
+	DisplayName   string `json:"displayName"`
+	Device        Device `json:"device"`
+	RemoteAddress string `json:"remoteAddress"`
+}

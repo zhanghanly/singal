@@ -79,6 +79,7 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	roomId := queryParams.Get("roomId")
 	peerId := queryParams.Get("peerId")
+	remoteAddr := r.RemoteAddr
 	clientProtocols := websocket.Subprotocols(r)
 	if len(clientProtocols) > 0 {
 		upgrader.Subprotocols = []string{clientProtocols[0]}
@@ -91,8 +92,17 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 	}
 	logger.Infof("accept wbsocket connection")
 
-	user := NewUser(conn, w, peerId, roomId)
-	user.userId = fmt.Sprintf("user_%d", time.Now().UnixNano())
+	user := &User{
+		wsConn:        conn,
+		wsServer:      w,
+		PeerId:        peerId,
+		roomId:        roomId,
+		RemoteAddress: remoteAddr,
+		userId:        fmt.Sprintf("user_%d", time.Now().UnixNano()),
+		createTs:      time.Now().Unix(),
+		sendResMsg:    make(chan *WsResponse),
+		sendReqMsg:    make(chan *WsRequest),
+	}
 	w.Register <- user
 
 	go user.WriteMessage()
