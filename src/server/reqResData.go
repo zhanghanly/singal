@@ -13,6 +13,7 @@ type AppData struct {
 	Direction string `json:"direction"`
 	Channel   string `json:"channel"`
 	Source    string `json:"source"`
+	PeerId    string `json:"peerId"`
 }
 
 type CreateTransportReqData struct {
@@ -109,12 +110,24 @@ type ProduceDataResData struct {
 }
 
 type NewDataConsumerReqData struct {
+	PeerId               string               `json:"peerId"`
 	TransportId          string               `json:"transportId"`
 	DataProducerId       string               `json:"dataProducerId"`
 	DataConsumerId       string               `json:"dataConsumerId"`
 	SCTPStreamParameters SCTPStreamParameters `json:"sctpStreamParameters"`
 	Label                string               `json:"label"`
 	AppData              AppData              `json:"appData"`
+}
+
+type NewConsumerReqData struct {
+	PeerId           string            `json:"peerId"`
+	TransportId      string            `json:"transportId"`
+	ConsumerId       string            `json:"consumerId"`
+	ProducerId       string            `json:"producerId"`
+	Kind             string            `json:"kind"`
+	RtpParameters    RtpCapabilities   `json:"rtpParameters"`
+	HeaderExtensions []HeaderExtension `json:"headerExtensions"`
+	Encodings        []Encodings       `json:"encodings"`
 }
 
 type Rtcp struct {

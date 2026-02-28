@@ -69,6 +69,63 @@ func (r *Room) NotifyOtherUsers(user *User) {
 	}
 }
 
+func (r *Room) ReqOtherNewDataConsumer(user *User) {
+	for k, v := range r.users {
+		if k == user.userId {
+			continue
+		}
+
+		newDataConsumerData := &NewDataConsumerReqData{
+			PeerId:         user.PeerId,
+			TransportId:    r.router.getConsumerTransportId(user.userId),
+			DataProducerId: RandString(36),
+			DataConsumerId: RandString(36),
+			SCTPStreamParameters: SCTPStreamParameters{
+				StreamId: 0,
+				Orderd:   true,
+			},
+			Label: "chat",
+			AppData: AppData{
+				PeerId:  user.PeerId,
+				Channel: "chat",
+			},
+		}
+
+		v.RequestNewDataConsumer(newDataConsumerData)
+	}
+}
+
+func (r *Room) ReqOtherNewConsumer(userId string) {
+	for k, v := range r.users {
+		if k == userId {
+			continue
+		}
+
+		producers := r.router.getProducerById(userId)
+		for _, producer := range producers {
+			consumers := r.router.getConsumerById(userId)
+			for _, consumer := range consumers {
+				if consumer.kind != producer.kind {
+					continue
+				}
+				if consumer != nil {
+					newConsumerData := &NewConsumerReqData{
+						PeerId:           v.PeerId,
+						TransportId:      consumer.transportId,
+						ConsumerId:       consumer.consumerId,
+						ProducerId:       producer.producerId,
+						Kind:             consumer.kind,
+						RtpParameters:    producer.parameters.RtpParameters,
+						HeaderExtensions: producer.parameters.HeaderExtensions,
+						Encodings:        producer.parameters.Encodings,
+					}
+					v.RequestNewConsumer(newConsumerData)
+				}
+			}
+		}
+	}
+}
+
 func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData, u *User) (*CreateTransportResData, error) {
 	res, err := gRtcServer.CreateWebrtcTransport(r.router)
 	if err != nil {
@@ -123,20 +180,11 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData, u *User) (*Cre
 
 	switch req.AppData.Direction {
 	case "producer":
-		producer := &Producer{
-			id:          u.userId,
-			transportId: res.TransportId,
-		}
-		r.router.addProducer(producer)
-		logger.Infof("add producer=%v", producer)
+		r.router.saveProducerTransportId(u.userId, res.TransportId)
 
 	case "consumer":
-		consumer := &Consumer{
-			id:          u.userId,
-			transportId: res.TransportId,
-		}
-		r.router.addConsumer(consumer)
-		logger.Infof("add consumer=%v", consumer)
+		r.router.saveConsumeTransportId(u.userId, res.TransportId)
+		r.router.CreateConsumes(u.userId)
 
 	default:
 		return nil, errors.New("bad AppData direction")
@@ -152,8 +200,8 @@ func (r *Room) CreateNewDataConsumer(u *User, transportId string) *NewDataConsum
 
 	return &NewDataConsumerReqData{
 		TransportId:    r.router.getConsumerTransportId(u.userId),
-		DataProducerId: RandString(12),
-		DataConsumerId: RandString(12),
+		DataProducerId: RandString(36),
+		DataConsumerId: RandString(36),
 		SCTPStreamParameters: SCTPStreamParameters{
 			StreamId: 0,
 			Orderd:   true,
@@ -169,6 +217,18 @@ func (r *Room) ConnectWebrtcTransport(req *ConnectTransportReqData) error {
 	return gRtcServer.ConnectWebrtcTransport(r.router, req)
 }
 
-func (r *Room) Produce(req *ProduceReqData) error {
-	return nil
+func (r *Room) Produce(userId string, req *ProduceReqData) (string, error) {
+	producer := &Producer{
+		producerId:  RandString(36),
+		transportId: req.TransportId,
+		kind:        req.Kind,
+		parameters:  req,
+	}
+	r.router.addProducer(userId, producer)
+
+	if len(r.router.getProducerById(userId)) > 1 {
+		r.ReqOtherNewConsumer(userId)
+	}
+
+	return producer.producerId, nil
 }

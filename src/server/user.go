@@ -27,18 +27,20 @@ type WsNotification struct {
 }
 
 type User struct {
-	userId        string
-	PeerId        string
-	DisplayName   string
-	createTs      int64
-	wsConn        *websocket.Conn
-	wsServer      *WsServer
-	sendResMsg    chan *WsResponse
-	sendReqMsg    chan *WsRequest
-	sendNotifyMsg chan *WsNotification
-	roomId        string
-	Device        Device
-	RemoteAddress string
+	userId             string
+	PeerId             string
+	DisplayName        string
+	createTs           int64
+	wsConn             *websocket.Conn
+	wsServer           *WsServer
+	sendResMsg         chan *WsResponse
+	sendReqMsg         chan *WsRequest
+	sendNotifyMsg      chan *WsNotification
+	roomId             string
+	Device             Device
+	RemoteAddress      string
+	reqId              int
+	newDataConsumerReq bool
 }
 
 func (u *User) ReadMessage() {
@@ -141,18 +143,21 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 			var reqData ConnectTransportReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				newDataConsumerReqData := room.CreateNewDataConsumer(u, reqData.TransportId)
-				if newDataConsumerReqData != nil {
-					req := &WsRequest{
-						Request: true,
-						Id:      10086,
-						Method:  "newDataConsumer",
-						Data:    newDataConsumerReqData,
+				if !u.newDataConsumerReq {
+					newDataConsumerReqData := room.CreateNewDataConsumer(u, reqData.TransportId)
+					if newDataConsumerReqData != nil {
+						req := &WsRequest{
+							Request: true,
+							Id:      u.reqId,
+							Method:  "newDataConsumer",
+							Data:    newDataConsumerReqData,
+						}
+						u.reqId++
+
+						u.sendReqMsg <- req
+						u.newDataConsumerReq = true
 					}
-
-					u.sendReqMsg <- req
 				}
-
 				err := room.ConnectWebrtcTransport(&reqData)
 				if err == nil {
 					response.Ok = true
@@ -173,7 +178,23 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 func (u *User) handleJoin(req *WsRequest) {
 	logger.Infof("recv join message")
 	room := gRoomManager.GetOrCreateRoom(u.roomId)
-	room.NotifyOtherUsers(u)
+	if room != nil {
+		reqDataBytes, err := json.Marshal(req.Data)
+		if err == nil {
+			var reqData JoinReqData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				u.Device = reqData.Device
+				u.DisplayName = reqData.DisplayName
+			} else {
+				logger.Errorf("transform ProduceDataReqData failed, reason=%v", err)
+			}
+		}
+		//notify other users
+		room.NotifyOtherUsers(u)
+		//room.ReqOtherNewDataConsumer(u)
+		//room.ReqOtherNewConsumer(u)
+	}
 
 	otherUsers := room.GetOtherUsers(u)
 	response := &WsResponse{
@@ -237,11 +258,11 @@ func (u *User) handleProduce(req *WsRequest) {
 			var reqData ProduceReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				err := room.Produce(&reqData)
+				producerId, err := room.Produce(u.userId, &reqData)
 				if err == nil {
 					response.Ok = true
 					response.Data = &ProduceResData{
-						ProducerId: RandString(12),
+						ProducerId: producerId,
 					}
 				} else {
 					logger.Errorf("produce req failed, reason=%v", err)
@@ -263,6 +284,30 @@ func (u *User) NotifyNewPeer(peerData *PeerData) {
 	}
 
 	u.sendNotifyMsg <- notify
+}
+
+func (u *User) RequestNewDataConsumer(reqData *NewDataConsumerReqData) {
+	req := &WsRequest{
+		Request: true,
+		Id:      u.reqId,
+		Method:  "newDataConsumer",
+		Data:    reqData,
+	}
+	u.reqId++
+
+	u.sendReqMsg <- req
+}
+
+func (u *User) RequestNewConsumer(reqData *NewConsumerReqData) {
+	req := &WsRequest{
+		Request: true,
+		Id:      u.reqId,
+		Method:  "newConsumer",
+		Data:    reqData,
+	}
+	u.reqId++
+
+	u.sendReqMsg <- req
 }
 
 func (u *User) WriteMessage() {
@@ -305,7 +350,7 @@ func (u *User) WriteMessage() {
 				logger.Info("failed to transform wsNotification to json")
 				continue
 			}
-			logger.Infof("send request=%s to client", jsonData)
+			logger.Infof("send notification=%s to client", jsonData)
 
 			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
 				logger.Infof("write message failed: %v", err)

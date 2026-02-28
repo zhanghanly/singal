@@ -2,6 +2,7 @@ package singal
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -93,15 +94,18 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 	logger.Infof("accept wbsocket connection")
 
 	user := &User{
-		wsConn:        conn,
-		wsServer:      w,
-		PeerId:        peerId,
-		roomId:        roomId,
-		RemoteAddress: remoteAddr,
-		userId:        fmt.Sprintf("user_%d", time.Now().UnixNano()),
-		createTs:      time.Now().Unix(),
-		sendResMsg:    make(chan *WsResponse),
-		sendReqMsg:    make(chan *WsRequest),
+		wsConn:             conn,
+		wsServer:           w,
+		PeerId:             peerId,
+		roomId:             roomId,
+		RemoteAddress:      remoteAddr,
+		userId:             fmt.Sprintf("user_%d", time.Now().UnixNano()),
+		createTs:           time.Now().Unix(),
+		sendResMsg:         make(chan *WsResponse),
+		sendReqMsg:         make(chan *WsRequest),
+		sendNotifyMsg:      make(chan *WsNotification),
+		reqId:              rand.Intn(1000000),
+		newDataConsumerReq: false,
 	}
 	w.Register <- user
 
