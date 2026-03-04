@@ -74,8 +74,10 @@ type Device struct {
 }
 
 type RtpCapabilities struct {
-	Mid         string              `json:"mid"`
-	MediaCodecs []CodecCapabilities `json:"codecs"`
+	Mid              string                  `json:"mid"`
+	MediaCodecs      []CodecCapabilities     `json:"codecs"`
+	HeaderExtensions []ProducerHeadExtension `json:"headerExtensions"`
+	Encodings        []Encodings             `json:"encodings"`
 }
 
 type JoinReqData struct {
@@ -120,14 +122,13 @@ type NewDataConsumerReqData struct {
 }
 
 type NewConsumerReqData struct {
-	PeerId           string            `json:"peerId"`
-	TransportId      string            `json:"transportId"`
-	ConsumerId       string            `json:"consumerId"`
-	ProducerId       string            `json:"producerId"`
-	Kind             string            `json:"kind"`
-	RtpParameters    RtpCapabilities   `json:"rtpParameters"`
-	HeaderExtensions []HeaderExtension `json:"headerExtensions"`
-	Encodings        []Encodings       `json:"encodings"`
+	PeerId        string          `json:"peerId"`
+	TransportId   string          `json:"transportId"`
+	ConsumerId    string          `json:"consumerId"`
+	ProducerId    string          `json:"producerId"`
+	Kind          string          `json:"kind"`
+	RtpParameters RtpCapabilities `json:"rtpParameters"`
+	Encodings     []Encodings     `json:"encodings"`
 }
 
 type Rtcp struct {
@@ -145,14 +146,19 @@ type Encodings struct {
 	Ssrc                  uint32 `json:"ssrc,omitempty"`
 }
 
+type ProducerHeadExtension struct {
+	Uri        string      `json:"uri"`
+	Id         int         `json:"id"`
+	Encrypt    bool        `json:"encrypt"`
+	Parameters interface{} `json:"parameters"`
+}
+
 type ProduceReqData struct {
-	TransportId      string            `json:"transportId"`
-	Kind             string            `json:"kind"`
-	RtpParameters    RtpCapabilities   `json:"rtpParameters"`
-	HeaderExtensions []HeaderExtension `json:"headerExtensions"`
-	Encodings        []Encodings       `json:"encodings"`
-	Rtcp             Rtcp              `json:"rtcp"`
-	Msid             string            `json:"msid"`
+	TransportId   string          `json:"transportId"`
+	Kind          string          `json:"kind"`
+	RtpParameters RtpCapabilities `json:"rtpParameters"`
+	Rtcp          Rtcp            `json:"rtcp"`
+	Msid          string          `json:"msid"`
 }
 
 type ProduceResData struct {

@@ -110,14 +110,14 @@ func (r *Room) ReqOtherNewConsumer(userId string) {
 				}
 				if consumer != nil {
 					newConsumerData := &NewConsumerReqData{
-						PeerId:           v.PeerId,
-						TransportId:      consumer.transportId,
-						ConsumerId:       consumer.consumerId,
-						ProducerId:       producer.producerId,
-						Kind:             consumer.kind,
-						RtpParameters:    producer.parameters.RtpParameters,
-						HeaderExtensions: producer.parameters.HeaderExtensions,
-						Encodings:        producer.parameters.Encodings,
+						PeerId:        v.PeerId,
+						TransportId:   consumer.transportId,
+						ConsumerId:    consumer.consumerId,
+						ProducerId:    producer.producerId,
+						Kind:          consumer.kind,
+						RtpParameters: producer.parameters.RtpParameters,
+						//HeaderExtensions: producer.parameters.RtpParameters.HeaderExtensions,
+						//Encodings: producer.parameters.Encodings,
 					}
 					v.RequestNewConsumer(newConsumerData)
 				}
@@ -226,6 +226,13 @@ func (r *Room) Produce(userId string, req *ProduceReqData) (string, error) {
 	}
 	r.router.addProducer(userId, producer)
 
+	logger.Infof("producer.parameters.Encodings size=%d", len(producer.parameters.RtpParameters.Encodings))
+	logger.Infof("producer.parameters.HeaderExtensions size=%d", len(producer.parameters.RtpParameters.HeaderExtensions))
+	logger.Infof("producer.parameters.RtpParameters.MediaCodecs size=%d", len(producer.parameters.RtpParameters.MediaCodecs))
+	_, err := gRtcServer.CreateProducer(r.router, producer)
+	if err != nil {
+		logger.Errorf("create producer failed, reason=%v", err)
+	}
 	if len(r.router.getProducerById(userId)) > 1 {
 		r.ReqOtherNewConsumer(userId)
 	}
