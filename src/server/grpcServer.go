@@ -2,6 +2,7 @@ package singal
 
 import (
 	"errors"
+	"math/rand"
 	"net"
 	pb "singal/src/server/proto"
 	"sync"
@@ -261,7 +262,7 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 
 		codec := &pb.Codec{
 			MimeType:      v.MimeType,
-			PayloadType:   uint32(v.PreferredPayloadType),
+			PayloadType:   uint32(v.PayloadType),
 			ClockRate:     uint32(v.ClockRate),
 			Channels:      uint32(v.Channels),
 			RtcpFeedbacks: rtcpFeedbacks,
@@ -283,6 +284,7 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 
 	encodings := make([]*pb.Encoding, 0)
 	for _, v := range producer.parameters.RtpParameters.Encodings {
+
 		encoding := &pb.Encoding{
 			Active:                v.Active,
 			ScalabilityMode:       v.ScalabilityMode,
@@ -292,24 +294,43 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 			Dtx:                   v.Dtx,
 			Ssrc:                  v.Ssrc,
 		}
+		if producer.kind == "video" {
+			ssrc := rand.Uint32()
+			v.Ssrc = ssrc
+			v.Rtx = &Rtx{
+				Ssrc: ssrc + 1,
+			}
+			encoding.Ssrc = v.Ssrc
+			encoding.RtxSsrc = v.Rtx.Ssrc
+		}
 
 		encodings = append(encodings, encoding)
 	}
 
-	rtpMappings := make([]*pb.RtpMapping, 0)
+	rtpMappings := &pb.RtpMapping{
+		PayloadMap:  make([]*pb.PayloadMap, 0),
+		EncodingMap: make([]*pb.EncodingMap, 0),
+	}
 	for _, v := range encodings {
-		rtpMapping := &pb.RtpMapping{
+		encodingMap := &pb.EncodingMap{
 			Rid:        v.Rid,
 			Ssrc:       v.Ssrc,
 			MappedSsrc: v.Ssrc,
 		}
 
-		rtpMappings = append(rtpMappings, rtpMapping)
+		rtpMappings.EncodingMap = append(rtpMappings.EncodingMap, encodingMap)
 	}
 
-	for k, v := range codecs {
-		rtpMappings[k].PayloadType = v.PayloadType
-		rtpMappings[k].MappedPayloadType = v.PayloadType
+	for _, v := range codecs {
+		payloadMap := &pb.PayloadMap{}
+		if producer.kind == "video" {
+			payloadMap.PayloadType = v.PayloadType
+			payloadMap.MappedPayloadType = v.PayloadType + 5
+		} else {
+			payloadMap.PayloadType = v.PayloadType
+			payloadMap.MappedPayloadType = v.PayloadType - 11
+		}
+		rtpMappings.PayloadMap = append(rtpMappings.PayloadMap, payloadMap)
 	}
 
 	serverMsg := &pb.ServerToWorker{
@@ -322,10 +343,10 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 				Kind:        producer.kind,
 				RtpParameters: &pb.RtpParameters{
 					Mid:  producer.parameters.RtpParameters.Mid,
-					Msid: producer.parameters.Msid,
+					Msid: producer.parameters.RtpParameters.Msid,
 					Rtcp: &pb.Rtcp{
-						Cname:       producer.parameters.Rtcp.CName,
-						ReducedSize: producer.parameters.Rtcp.ReducedSize,
+						Cname:       producer.parameters.RtpParameters.Rtcp.CName,
+						ReducedSize: producer.parameters.RtpParameters.Rtcp.ReducedSize,
 					},
 					Codecs:         codecs,
 					HeadExtensions: headerExtensions,
@@ -343,6 +364,148 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 	select {
 	case resMsg := <-resCh:
 		res := resMsg.GetProduceRes()
+		if !res.Success {
+			return nil, errors.New(res.ErrorDetail)
+		}
+
+		return res, nil
+
+	case <-time.After(5 * time.Second):
+		return nil, errors.New("request timeout")
+	}
+}
+
+func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerReqData) (*pb.ConsumeResponse, error) {
+	//workerId := router.workerId
+	workerId := "1"
+	val, ok := s.workers.Load(workerId)
+	if !ok {
+		return nil, errors.New("worker offline")
+	}
+	conn := val.(*WorkerStream)
+
+	seqID := atomic.AddUint64(&s.nextID, 1)
+	resCh := make(chan *pb.WorkerToServer, 1)
+
+	conn.mu.Lock()
+	conn.pending[seqID] = resCh
+	conn.mu.Unlock()
+
+	codecs := make([]*pb.Codec, 0)
+	for _, v := range consumerReq.RtpParameters.MediaCodecs {
+		rtcpFeedbacks := make([]*pb.RtcpFeedback, 0)
+		for _, feedback := range v.Feedbacks {
+			rtcpFeedback := &pb.RtcpFeedback{
+				Type:      feedback.Type,
+				Parameter: feedback.Parameter,
+			}
+			rtcpFeedbacks = append(rtcpFeedbacks, rtcpFeedback)
+		}
+
+		codec := &pb.Codec{
+			MimeType:      v.MimeType,
+			PayloadType:   uint32(v.PayloadType),
+			ClockRate:     uint32(v.ClockRate),
+			Channels:      uint32(v.Channels),
+			RtcpFeedbacks: rtcpFeedbacks,
+		}
+
+		codecs = append(codecs, codec)
+	}
+
+	headerExtensions := make([]*pb.HeadExtension, 0)
+	for _, v := range consumerReq.RtpParameters.HeaderExtensions {
+		headerExtension := &pb.HeadExtension{
+			Uri:     v.Uri,
+			Id:      uint32(v.Id),
+			Encrypt: v.Encrypt,
+		}
+
+		headerExtensions = append(headerExtensions, headerExtension)
+	}
+
+	logger.Infof("len consumerReq.RtpParameters.Encodings=%d", len(consumerReq.RtpParameters.Encodings))
+	encodings := make([]*pb.Encoding, 0)
+	for _, v := range consumerReq.RtpParameters.Encodings {
+		encoding := &pb.Encoding{
+			Active:                v.Active,
+			ScalabilityMode:       v.ScalabilityMode,
+			ScaleResolutionDownBy: uint32(v.ScaleResolutionDownBy),
+			MaxBitrate:            uint32(v.MaxBitrate),
+			Rid:                   v.Rid,
+			Dtx:                   v.Dtx,
+			Ssrc:                  v.Ssrc,
+			HasRtx:                false,
+		}
+		if consumerReq.Kind == "video" {
+			encoding.HasRtx = true
+			encoding.RtxSsrc = v.Rtx.Ssrc
+		}
+
+		encodings = append(encodings, encoding)
+		//if consumerReq.Kind == "video" {
+		//	break
+		//}
+	}
+
+	rtpMappings := &pb.RtpMapping{
+		PayloadMap:  make([]*pb.PayloadMap, 0),
+		EncodingMap: make([]*pb.EncodingMap, 0),
+	}
+	for _, v := range encodings {
+		encodingMap := &pb.EncodingMap{
+			Rid:        v.Rid,
+			Ssrc:       v.Ssrc,
+			MappedSsrc: v.Ssrc,
+		}
+
+		rtpMappings.EncodingMap = append(rtpMappings.EncodingMap, encodingMap)
+	}
+
+	for _, v := range codecs {
+		payloadMap := &pb.PayloadMap{}
+		if consumerReq.Kind == "video" {
+			payloadMap.PayloadType = v.PayloadType
+			payloadMap.MappedPayloadType = v.PayloadType + 5
+		} else {
+			payloadMap.PayloadType = v.PayloadType
+			payloadMap.MappedPayloadType = v.PayloadType - 11
+		}
+		rtpMappings.PayloadMap = append(rtpMappings.PayloadMap, payloadMap)
+	}
+
+	serverMsg := &pb.ServerToWorker{
+		SeqId: seqID,
+		Payload: &pb.ServerToWorker_ConsumerReq{
+			ConsumerReq: &pb.ConsumeRequest{
+				RouterId:    router.routerId,
+				TransportId: consumerReq.TransportId,
+				ProducerId:  consumerReq.ProducerId,
+				ConsumerId:  consumerReq.ConsumerId,
+				Kind:        consumerReq.Kind,
+				RtpParameters: &pb.RtpParameters{
+					Mid:  consumerReq.RtpParameters.Mid,
+					Msid: consumerReq.RtpParameters.Msid,
+					Rtcp: &pb.Rtcp{
+						Cname:       consumerReq.RtpParameters.Rtcp.CName,
+						ReducedSize: consumerReq.RtpParameters.Rtcp.ReducedSize,
+					},
+					Codecs:         codecs,
+					HeadExtensions: headerExtensions,
+					Encodings:      encodings,
+					RtpMapping:     rtpMappings,
+				},
+			},
+		},
+	}
+	if err := conn.stream.Send(serverMsg); err != nil {
+		return nil, err
+	}
+
+	// wait or timeout
+	select {
+	case resMsg := <-resCh:
+		res := resMsg.GetConsumerRes()
 		if !res.Success {
 			return nil, errors.New(res.ErrorDetail)
 		}

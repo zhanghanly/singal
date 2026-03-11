@@ -258,7 +258,7 @@ func (u *User) handleProduce(req *WsRequest) {
 			var reqData ProduceReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				producerId, err := room.Produce(u.userId, &reqData)
+				producerId, err := room.Produce(u, &reqData)
 				if err == nil {
 					response.Ok = true
 					response.Data = &ProduceResData{

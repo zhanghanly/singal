@@ -122,6 +122,34 @@ func (r *Router) getConsumerById(userId string) []*Consumer {
 	return r.consumers[userId]
 }
 
+func (r *Router) getOtherConsumersById(userId string) []*Consumer {
+	consumers := make([]*Consumer, 0)
+	for k, v := range r.consumers {
+		if k == userId {
+			continue
+		}
+		for _, consumer := range v {
+			consumers = append(consumers, consumer)
+		}
+	}
+
+	return consumers
+}
+
+func (r *Router) getOtherProducersById(userId string) []*Producer {
+	producers := make([]*Producer, 0)
+	for k, v := range r.producers {
+		if k == userId {
+			continue
+		}
+		for _, producer := range v {
+			producers = append(producers, producer)
+		}
+	}
+
+	return producers
+}
+
 type Worker struct {
 	workerId      string
 	publicIp      string

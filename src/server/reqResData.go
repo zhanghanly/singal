@@ -10,10 +10,10 @@ type SCTPCapabilities struct {
 }
 
 type AppData struct {
-	Direction string `json:"direction"`
-	Channel   string `json:"channel"`
-	Source    string `json:"source"`
-	PeerId    string `json:"peerId"`
+	Direction string `json:"direction,omitempty"`
+	Channel   string `json:"channel,omitempty"`
+	Source    string `json:"source,omitempty"`
+	PeerId    string `json:"peerId,omitempty"`
 }
 
 type CreateTransportReqData struct {
@@ -77,7 +77,9 @@ type RtpCapabilities struct {
 	Mid              string                  `json:"mid"`
 	MediaCodecs      []CodecCapabilities     `json:"codecs"`
 	HeaderExtensions []ProducerHeadExtension `json:"headerExtensions"`
-	Encodings        []Encodings             `json:"encodings"`
+	Encodings        []*Encodings            `json:"encodings"`
+	Rtcp             Rtcp                    `json:"rtcp"`
+	Msid             string                  `json:"msid"`
 }
 
 type JoinReqData struct {
@@ -87,7 +89,7 @@ type JoinReqData struct {
 }
 
 type JoinResData struct {
-	Peers []*PeerData `json:"peers"`
+	Peers []*Peer `json:"peers"`
 }
 
 type ConnectTransportReqData struct {
@@ -121,19 +123,32 @@ type NewDataConsumerReqData struct {
 	AppData              AppData              `json:"appData"`
 }
 
+type ConsumerScore struct {
+	Score          int   `json:"score"`
+	ProducerScore  int   `json:"producerScore"`
+	ProducerScores []int `json:"producerScores"`
+}
+
 type NewConsumerReqData struct {
-	PeerId        string          `json:"peerId"`
-	TransportId   string          `json:"transportId"`
-	ConsumerId    string          `json:"consumerId"`
-	ProducerId    string          `json:"producerId"`
-	Kind          string          `json:"kind"`
-	RtpParameters RtpCapabilities `json:"rtpParameters"`
-	Encodings     []Encodings     `json:"encodings"`
+	PeerId         string          `json:"peerId"`
+	TransportId    string          `json:"transportId"`
+	ConsumerId     string          `json:"consumerId"`
+	ProducerId     string          `json:"producerId"`
+	Kind           string          `json:"kind"`
+	RtpParameters  RtpCapabilities `json:"rtpParameters"`
+	Type           string          `json:"type"`
+	ProducerPaused bool            `json:"producerPaused"`
+	AppData        AppData         `json:"appData"`
+	ConsumerScore  *ConsumerScore  `json:"consumerScore"`
 }
 
 type Rtcp struct {
 	CName       string `json:"cname"`
 	ReducedSize bool   `json:"reducedSize"`
+}
+
+type Rtx struct {
+	Ssrc uint32 `json:"ssrc"`
 }
 
 type Encodings struct {
@@ -144,6 +159,7 @@ type Encodings struct {
 	Rid                   string `json:"rid,omitempty"`
 	Dtx                   bool   `json:"dtx,omitempty"`
 	Ssrc                  uint32 `json:"ssrc,omitempty"`
+	Rtx                   *Rtx   `json:"rtx,omitempty"`
 }
 
 type ProducerHeadExtension struct {
@@ -157,17 +173,19 @@ type ProduceReqData struct {
 	TransportId   string          `json:"transportId"`
 	Kind          string          `json:"kind"`
 	RtpParameters RtpCapabilities `json:"rtpParameters"`
-	Rtcp          Rtcp            `json:"rtcp"`
-	Msid          string          `json:"msid"`
 }
 
 type ProduceResData struct {
 	ProducerId string `json:"producerId"`
 }
 
-type PeerData struct {
+type Peer struct {
 	PeerId        string `json:"peerId"`
 	DisplayName   string `json:"displayName"`
 	Device        Device `json:"device"`
 	RemoteAddress string `json:"remoteAddress"`
+}
+
+type PeerData struct {
+	Peer Peer `json:"peer"`
 }

@@ -34,14 +34,14 @@ func (r *Room) DeleteUser(user *User) {
 	logger.Infof("delete userId=%s peerId=%s from roomId=%s", user.userId, user.PeerId, r.roomId)
 }
 
-func (r *Room) GetOtherUsers(user *User) []*PeerData {
-	userLst := make([]*PeerData, 0)
+func (r *Room) GetOtherUsers(user *User) []*Peer {
+	userLst := make([]*Peer, 0)
 	for k, v := range r.users {
 		if k == user.userId {
 			continue
 		}
 
-		peerData := &PeerData{
+		peerData := &Peer{
 			PeerId:        v.PeerId,
 			DisplayName:   v.DisplayName,
 			Device:        v.Device,
@@ -60,10 +60,12 @@ func (r *Room) NotifyOtherUsers(user *User) {
 		}
 
 		peerData := &PeerData{
-			PeerId:        user.PeerId,
-			DisplayName:   user.DisplayName,
-			Device:        user.Device,
-			RemoteAddress: user.RemoteAddress,
+			Peer: Peer{
+				PeerId:        user.PeerId,
+				DisplayName:   user.DisplayName,
+				Device:        user.Device,
+				RemoteAddress: user.RemoteAddress,
+			},
 		}
 		v.NotifyNewPeer(peerData)
 	}
@@ -95,33 +97,149 @@ func (r *Room) ReqOtherNewDataConsumer(user *User) {
 	}
 }
 
-func (r *Room) ReqOtherNewConsumer(userId string) {
+func (r *Room) ReqPullOtherNewProducer(u *User, producer *Producer) {
+	var consumer *Consumer
+	consumers := r.router.getConsumerById(u.userId)
+	for _, v := range consumers {
+		if v.kind == producer.kind {
+			consumer = v
+		}
+	}
+
 	for k, v := range r.users {
-		if k == userId {
+		if k == u.userId {
 			continue
 		}
 
-		producers := r.router.getProducerById(userId)
-		for _, producer := range producers {
-			consumers := r.router.getConsumerById(userId)
-			for _, consumer := range consumers {
-				if consumer.kind != producer.kind {
-					continue
-				}
-				if consumer != nil {
-					newConsumerData := &NewConsumerReqData{
-						PeerId:        v.PeerId,
-						TransportId:   consumer.transportId,
-						ConsumerId:    consumer.consumerId,
-						ProducerId:    producer.producerId,
-						Kind:          consumer.kind,
-						RtpParameters: producer.parameters.RtpParameters,
-						//HeaderExtensions: producer.parameters.RtpParameters.HeaderExtensions,
-						//Encodings: producer.parameters.Encodings,
-					}
-					v.RequestNewConsumer(newConsumerData)
-				}
+		producers := r.router.getOtherProducersById(u.userId)
+		for _, producer1 := range producers {
+			if producer1.kind != producer.kind {
+				continue
 			}
+			newConsumerData := &NewConsumerReqData{
+				PeerId:         v.PeerId,
+				TransportId:    consumer.transportId,
+				ConsumerId:     consumer.consumerId,
+				ProducerId:     producer1.producerId,
+				Kind:           consumer.kind,
+				RtpParameters:  producer1.parameters.RtpParameters,
+				ProducerPaused: false,
+				Type:           "simple",
+				AppData: AppData{
+					PeerId: u.PeerId,
+					Source: "audio",
+				},
+				ConsumerScore: &ConsumerScore{
+					Score:          10,
+					ProducerScore:  0,
+					ProducerScores: []int{0},
+				},
+			}
+			if consumer.kind == "video" {
+				newConsumerData.RtpParameters.Rtcp.CName = RandString(20)
+
+				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 101
+				newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
+				newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
+
+				newConsumerData.Type = "simulcast"
+				newConsumerData.AppData.Source = "video"
+
+				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+
+			} else {
+				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 100
+			}
+
+			_, err := gRtcServer.CreateConsumer(r.router, newConsumerData)
+			if err != nil {
+				logger.Errorf("create consumer failed, reason=%v", err)
+			}
+
+			if len(newConsumerData.RtpParameters.Encodings) > 1 {
+				newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
+				newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
+				newConsumerData.RtpParameters.Encodings[0].Rid = ""
+				newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
+				newConsumerData.RtpParameters.Encodings[0].Active = false
+			}
+
+			u.RequestNewConsumer(newConsumerData)
+		}
+	}
+}
+
+func (r *Room) ReqOtherNewConsumer(u *User, producer *Producer) {
+	for k, v := range r.users {
+		if k == u.userId {
+			continue
+		}
+
+		consumers := r.router.getOtherConsumersById(u.userId)
+		for _, consumer := range consumers {
+			if consumer.kind != producer.kind {
+				continue
+			}
+			newConsumerData := &NewConsumerReqData{
+				PeerId:        u.PeerId,
+				TransportId:   consumer.transportId,
+				ConsumerId:    consumer.consumerId,
+				ProducerId:    producer.producerId,
+				Kind:          consumer.kind,
+				RtpParameters: producer.parameters.RtpParameters,
+				//Msid:          producer.parameters.Msid,
+				//Rtcp:          producer.parameters.Rtcp,
+				//HeaderExtensions: producer.parameters.RtpParameters.HeaderExtensions,
+				//Encodings: producer.parameters.Encodings,
+				ProducerPaused: false,
+				Type:           "simple",
+				AppData: AppData{
+					PeerId: u.PeerId,
+					Source: "audio",
+				},
+				ConsumerScore: &ConsumerScore{
+					Score:          10,
+					ProducerScore:  0,
+					ProducerScores: []int{0},
+				},
+			}
+			if consumer.kind == "video" {
+				//ssrc := rand.Uint32()
+				//newConsumerData.RtpParameters.Encodings[0].Ssrc = ssrc
+				//newConsumerData.RtpParameters.Encodings[0].Rtx = &Rtx{
+				//	Ssrc: ssrc + 1,
+				//}
+				newConsumerData.RtpParameters.Rtcp.CName = RandString(20)
+
+				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 101
+				newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
+				newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
+
+				newConsumerData.Type = "simulcast"
+				newConsumerData.AppData.Source = "video"
+
+				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+
+			} else {
+				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 100
+			}
+
+			_, err := gRtcServer.CreateConsumer(r.router, newConsumerData)
+			if err != nil {
+				logger.Errorf("create consumer failed, reason=%v", err)
+			}
+
+			if len(newConsumerData.RtpParameters.Encodings) > 1 {
+				newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
+				newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
+				newConsumerData.RtpParameters.Encodings[0].Rid = ""
+				newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
+				newConsumerData.RtpParameters.Encodings[0].Active = false
+			}
+
+			v.RequestNewConsumer(newConsumerData)
 		}
 	}
 }
@@ -217,24 +335,27 @@ func (r *Room) ConnectWebrtcTransport(req *ConnectTransportReqData) error {
 	return gRtcServer.ConnectWebrtcTransport(r.router, req)
 }
 
-func (r *Room) Produce(userId string, req *ProduceReqData) (string, error) {
+func (r *Room) Produce(u *User, req *ProduceReqData) (string, error) {
 	producer := &Producer{
 		producerId:  RandString(36),
 		transportId: req.TransportId,
 		kind:        req.Kind,
 		parameters:  req,
 	}
-	r.router.addProducer(userId, producer)
+	r.router.addProducer(u.userId, producer)
 
 	logger.Infof("producer.parameters.Encodings size=%d", len(producer.parameters.RtpParameters.Encodings))
 	logger.Infof("producer.parameters.HeaderExtensions size=%d", len(producer.parameters.RtpParameters.HeaderExtensions))
 	logger.Infof("producer.parameters.RtpParameters.MediaCodecs size=%d", len(producer.parameters.RtpParameters.MediaCodecs))
-	_, err := gRtcServer.CreateProducer(r.router, producer)
-	if err != nil {
-		logger.Errorf("create producer failed, reason=%v", err)
-	}
-	if len(r.router.getProducerById(userId)) > 1 {
-		r.ReqOtherNewConsumer(userId)
+
+	if producer.kind == "audio" {
+		_, err := gRtcServer.CreateProducer(r.router, producer)
+		if err != nil {
+			logger.Errorf("create producer failed, reason=%v", err)
+		}
+
+		r.ReqOtherNewConsumer(u, producer)
+		r.ReqPullOtherNewProducer(u, producer)
 	}
 
 	return producer.producerId, nil

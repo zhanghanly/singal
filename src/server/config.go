@@ -6,13 +6,14 @@ import (
 )
 
 type CodecCapabilities struct {
-	Kind                 string           `json:"kind"`
+	Kind                 string           `json:"kind,omitempty"`
 	MimeType             string           `json:"mimeType"`
 	ClockRate            int              `json:"clockRate"`
 	Channels             int              `json:"channels,omitempty"`
 	Parameters           *CodecParameters `json:"parameters,omitempty"`
 	Feedbacks            []RtcpFeedback   `json:"rtcpFeedback"`
-	PreferredPayloadType int              `json:"preferredPayloadType"`
+	PreferredPayloadType int              `json:"preferredPayloadType,omitempty"`
+	PayloadType          int              `json:"payloadType,omitempty"`
 }
 
 type CodecParameters struct {
@@ -20,6 +21,7 @@ type CodecParameters struct {
 	ProfileLevelId        string `json:"profile-level-id,omitempty"`
 	LevelAsymmetryAllowed int    `json:"level-asymmetry-allowed,omitempty"`
 	XGoogleStartBitrate   int    `json:"x-google-start-bitrate,omitempty"`
+	Apt                   int    `json:"apt,omitempty"`
 }
 
 type RtcpFeedback struct {

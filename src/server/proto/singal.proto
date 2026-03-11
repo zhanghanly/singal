@@ -127,14 +127,24 @@ message Encoding {
   string rid = 5;
   bool dtx = 6;
   uint32 ssrc = 7;
+  bool hasRtx = 8;
+  uint32 rtxSsrc = 9;
 }
 
-message RtpMapping {
+message PayloadMap {
+  uint32 payloadType = 1;
+  uint32 mappedPayloadType = 2;
+}
+
+message EncodingMap {
   string rid = 1;
   uint32 ssrc = 2;
   uint32 mappedSsrc = 3;
-  uint32 payloadType = 4;
-  uint32 mappedPayloadType = 5;
+}
+
+message RtpMapping {
+  repeated PayloadMap PayloadMap = 1;
+  repeated EncodingMap encodingMap = 2;
 }
 
 message RtpParameters {
@@ -144,7 +154,7 @@ message RtpParameters {
   repeated Codec codecs = 4;
   repeated HeadExtension headExtensions = 5;
   repeated Encoding encodings = 6;
-  repeated RtpMapping rtpMapping = 7;
+  RtpMapping rtpMapping = 7;
 }
 
 message ProduceRequest {
@@ -163,8 +173,13 @@ message ProduceResponse {
 }
 
 message ConsumeRequest {
-  string transport_id = 1;
-  string producer_id = 2;
+  string router_id = 1;
+  string transport_id = 2;
+  string producer_id = 3;
+  string consumer_id = 4;
+  string kind = 5;
+  string app_data = 6;
+  RtpParameters rtpParameters = 7;
 }
 
 message ConsumeResponse {
