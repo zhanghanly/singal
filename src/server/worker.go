@@ -1,5 +1,7 @@
 package singal
 
+import "strconv"
+
 type MediaType int32
 
 const (
@@ -19,7 +21,7 @@ type Producer struct {
 type Consumer struct {
 	consumerId  string
 	transportId string
-	producers   []*Producer
+	producerId  string
 	kind        string
 	originSsrc  uint32
 	newSsrc     uint32
@@ -148,6 +150,12 @@ func (r *Router) getOtherProducersById(userId string) []*Producer {
 	}
 
 	return producers
+}
+
+func (r *Router) getConsumerStreamMid(userId string) string {
+	size := len(r.consumers[userId])
+
+	return strconv.Itoa(size)
 }
 
 type Worker struct {
