@@ -37,7 +37,7 @@ type User struct {
 	sendReqMsg         chan *WsRequest
 	sendNotifyMsg      chan *WsNotification
 	roomId             string
-	Device             Device
+	Device             *Device
 	RemoteAddress      string
 	reqId              int
 	newDataConsumerReq bool
@@ -281,6 +281,16 @@ func (u *User) NotifyNewPeer(peerData *PeerData) {
 		Notification: true,
 		Method:       "newPeer",
 		Data:         peerData,
+	}
+
+	u.sendNotifyMsg <- notify
+}
+
+func (u *User) NotifyPeerClosed(peer *Peer) {
+	notify := &WsNotification{
+		Notification: true,
+		Method:       "peerClosed",
+		Data:         peer,
 	}
 
 	u.sendNotifyMsg <- notify

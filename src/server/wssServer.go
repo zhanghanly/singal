@@ -13,7 +13,6 @@ type WsServer struct {
 	Users      map[*User]bool
 	Register   chan *User
 	Unregister chan *User
-	//Broadcast  chan Message
 }
 
 var upgrader = websocket.Upgrader{
@@ -29,7 +28,6 @@ func NewServer() *WsServer {
 		Users:      make(map[*User]bool),
 		Register:   make(chan *User),
 		Unregister: make(chan *User),
-		//Broadcast:  make(chan Message),
 	}
 }
 
@@ -42,7 +40,6 @@ func (w *WsServer) Run() {
 			if room != nil {
 				room.AddUser(user)
 				logger.Infof("userId=%s peerId=%s join roomId=%s successfully", user.userId, user.PeerId, user.roomId)
-				//w.Broadcast <- joinMsg
 			} else {
 				logger.Infof("userId=%s peerId=%s join roomId=%s failed", user.userId, user.PeerId, user.roomId)
 			}
@@ -56,19 +53,8 @@ func (w *WsServer) Run() {
 				if room != nil {
 					room.DeleteUser(user)
 					logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.PeerId, user.roomId)
-					//w.Broadcast <- leaveMsg
 				}
 			}
-
-			//case message := <-w.Broadcast:
-			//	for user := range w.Users {
-			//		select {
-			//		case user.sendMsg <- message:
-			//		default:
-			//			close(user.sendMsg)
-			//			delete(w.Users, user)
-			//		}
-			//	}
 		}
 	}
 }

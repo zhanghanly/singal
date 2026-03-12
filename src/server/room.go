@@ -32,6 +32,14 @@ func (r *Room) AddUser(user *User) {
 func (r *Room) DeleteUser(user *User) {
 	delete(r.users, user.userId)
 	logger.Infof("delete userId=%s peerId=%s from roomId=%s", user.userId, user.PeerId, r.roomId)
+
+	//notify other users
+	peer := &Peer{
+		PeerId: user.PeerId,
+	}
+	for _, user := range r.users {
+		user.NotifyPeerClosed(peer)
+	}
 }
 
 func (r *Room) GetOtherUsers(user *User) []*Peer {

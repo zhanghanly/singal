@@ -84,7 +84,7 @@ type RtpCapabilities struct {
 
 type JoinReqData struct {
 	DisplayName     string          `json:"displayName"`
-	Device          Device          `json:"device"`
+	Device          *Device         `json:"device"`
 	RtpCapabilities RtpCapabilities `json:"rtpCapabilities"`
 }
 
@@ -180,10 +180,10 @@ type ProduceResData struct {
 }
 
 type Peer struct {
-	PeerId        string `json:"peerId"`
-	DisplayName   string `json:"displayName"`
-	Device        Device `json:"device"`
-	RemoteAddress string `json:"remoteAddress"`
+	PeerId        string  `json:"peerId,omitempty"`
+	DisplayName   string  `json:"displayName,omitempty"`
+	Device        *Device `json:"device,omitempty"`
+	RemoteAddress string  `json:"remoteAddress,omitempty"`
 }
 
 type PeerData struct {
