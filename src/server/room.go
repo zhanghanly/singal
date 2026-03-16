@@ -105,6 +105,62 @@ func (r *Room) ReqOtherNewDataConsumer(user *User) {
 	}
 }
 
+func (r *Room) CreateNewConsumerData(consumer *Consumer, producer *Producer, peerId string, userId string) *NewConsumerReqData {
+	newConsumerData := &NewConsumerReqData{
+		PeerId:         peerId,
+		TransportId:    consumer.transportId,
+		ConsumerId:     consumer.consumerId,
+		ProducerId:     consumer.producerId,
+		Kind:           consumer.kind,
+		RtpParameters:  producer.parameters.RtpParameters,
+		ProducerPaused: false,
+		Type:           "simple",
+		AppData: AppData{
+			PeerId: peerId,
+			Source: "audio",
+		},
+		ConsumerScore: &ConsumerScore{
+			Score:          10,
+			ProducerScore:  0,
+			ProducerScores: []int{0},
+		},
+	}
+	//reset Mid
+	newConsumerData.RtpParameters.Mid = r.router.getConsumerStreamMid(userId)
+
+	if consumer.kind == "video" {
+		newConsumerData.RtpParameters.Rtcp.CName = RandString(20)
+
+		newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 101
+		newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
+		newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
+
+		newConsumerData.Type = "simulcast"
+		newConsumerData.AppData.Source = "video"
+
+		newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+		newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
+
+	} else {
+		newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 100
+	}
+
+	_, err := gRtcServer.CreateConsumer(r.router, newConsumerData)
+	if err != nil {
+		logger.Errorf("create consumer failed, reason=%v", err)
+	}
+
+	if len(newConsumerData.RtpParameters.Encodings) > 1 {
+		newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
+		newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
+		newConsumerData.RtpParameters.Encodings[0].Rid = ""
+		newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
+		newConsumerData.RtpParameters.Encodings[0].Active = false
+	}
+
+	return newConsumerData
+}
+
 func (r *Room) ReqPullOtherNewProducer(u *User, producer *Producer) {
 	for k, v := range r.users {
 		if k == u.userId {
@@ -123,58 +179,8 @@ func (r *Room) ReqPullOtherNewProducer(u *User, producer *Producer) {
 				kind:        producer.kind,
 				producerId:  producer1.producerId,
 			}
-			newConsumerData := &NewConsumerReqData{
-				PeerId:         v.PeerId,
-				TransportId:    consumer.transportId,
-				ConsumerId:     consumer.consumerId,
-				ProducerId:     consumer.producerId,
-				Kind:           consumer.kind,
-				RtpParameters:  producer1.parameters.RtpParameters,
-				ProducerPaused: false,
-				Type:           "simple",
-				AppData: AppData{
-					PeerId: u.PeerId,
-					Source: "audio",
-				},
-				ConsumerScore: &ConsumerScore{
-					Score:          10,
-					ProducerScore:  0,
-					ProducerScores: []int{0},
-				},
-			}
-			//reset Mid
-			newConsumerData.RtpParameters.Mid = r.router.getConsumerStreamMid(u.userId)
 
-			if consumer.kind == "video" {
-				newConsumerData.RtpParameters.Rtcp.CName = RandString(20)
-
-				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 101
-				newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
-				newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
-
-				newConsumerData.Type = "simulcast"
-				newConsumerData.AppData.Source = "video"
-
-				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
-				newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
-
-			} else {
-				newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 100
-			}
-
-			_, err := gRtcServer.CreateConsumer(r.router, newConsumerData)
-			if err != nil {
-				logger.Errorf("create consumer failed, reason=%v", err)
-			}
-
-			if len(newConsumerData.RtpParameters.Encodings) > 1 {
-				newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
-				newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
-				newConsumerData.RtpParameters.Encodings[0].Rid = ""
-				newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
-				newConsumerData.RtpParameters.Encodings[0].Active = false
-			}
-
+			newConsumerData := r.CreateNewConsumerData(consumer, producer1, v.PeerId, u.userId)
 			u.RequestNewConsumer(newConsumerData)
 			r.router.addConsumer(u.userId, consumer)
 		}
@@ -193,58 +199,8 @@ func (r *Room) ReqOtherNewConsumer(u *User, producer *Producer) {
 			kind:        producer.kind,
 			producerId:  producer.producerId,
 		}
-		newConsumerData := &NewConsumerReqData{
-			PeerId:         u.PeerId,
-			TransportId:    consumer.transportId,
-			ConsumerId:     consumer.consumerId,
-			ProducerId:     consumer.producerId,
-			Kind:           consumer.kind,
-			RtpParameters:  producer.parameters.RtpParameters,
-			ProducerPaused: false,
-			Type:           "simple",
-			AppData: AppData{
-				PeerId: u.PeerId,
-				Source: "audio",
-			},
-			ConsumerScore: &ConsumerScore{
-				Score:          10,
-				ProducerScore:  0,
-				ProducerScores: []int{0},
-			},
-		}
-		//reset Mid
-		newConsumerData.RtpParameters.Mid = r.router.getConsumerStreamMid(v.userId)
 
-		if consumer.kind == "video" {
-			newConsumerData.RtpParameters.Rtcp.CName = RandString(20)
-
-			newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 101
-			newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
-			newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
-
-			newConsumerData.Type = "simulcast"
-			newConsumerData.AppData.Source = "video"
-
-			newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
-			newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
-
-		} else {
-			newConsumerData.RtpParameters.MediaCodecs[0].PayloadType = 100
-		}
-
-		_, err := gRtcServer.CreateConsumer(r.router, newConsumerData)
-		if err != nil {
-			logger.Errorf("create consumer failed, reason=%v", err)
-		}
-
-		if len(newConsumerData.RtpParameters.Encodings) > 1 {
-			newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
-			newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
-			newConsumerData.RtpParameters.Encodings[0].Rid = ""
-			newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
-			newConsumerData.RtpParameters.Encodings[0].Active = false
-		}
-
+		newConsumerData := r.CreateNewConsumerData(consumer, producer, u.PeerId, v.userId)
 		v.RequestNewConsumer(newConsumerData)
 		r.router.addConsumer(v.userId, consumer)
 	}
