@@ -2,7 +2,23 @@ package singal
 
 import (
 	"errors"
+	"strings"
 	"time"
+)
+
+const (
+	MID int = iota + 1
+	RTP_STREAM_ID
+	REPAIRED_RTP_STREAM_ID
+	ABS_SEND_TIME
+	TRANSPORT_WIDE_CC_01
+	SSRC_AUDIO_LEVEL
+	DEPENDENCY_DESCRIPTOR
+	VIDEO_ORIENTATION
+	TIME_OFFSET
+	ABS_CAPTURE_TIME
+	PLAYOUT_DELAY
+	MEDIASOUP_PACKET_ID
 )
 
 type Room struct {
@@ -157,6 +173,7 @@ func (r *Room) CreateNewConsumerData(consumer *Consumer, producer *Producer, pee
 	//	newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
 	//	newConsumerData.RtpParameters.Encodings[0].Active = false
 	//}
+	r.ChangeExtensionId(newConsumerData.RtpParameters.HeaderExtensions)
 
 	return newConsumerData
 }
@@ -330,4 +347,45 @@ func (r *Room) RemoveFeedbackRemb(feedback []RtcpFeedback) {
 			i--
 		}
 	}
+}
+
+func (r *Room) ChangeExtensionId(extensionIds []ProducerHeadExtension) {
+	for k, _ := range extensionIds {
+		extensionIds[k].Id = r.GetNewExtensionId(extensionIds[k].Uri)
+	}
+}
+
+func (r *Room) GetNewExtensionId(uri string) int {
+	if strings.Contains(uri, "mid") {
+		return MID
+
+	} else if strings.Contains(uri, "abs-send-time") {
+		return ABS_SEND_TIME
+
+	} else if strings.Contains(uri, "transport-wide-cc-extensions") {
+		return TRANSPORT_WIDE_CC_01
+
+	} else if strings.Contains(uri, "ssrc-audio-level") {
+		return SSRC_AUDIO_LEVEL
+
+	} else if strings.Contains(uri, "abs-capture-time") {
+		return ABS_CAPTURE_TIME
+
+	} else if strings.Contains(uri, "video-orientation") {
+		return VIDEO_ORIENTATION
+
+	} else if strings.Contains(uri, "toffset") {
+		return TIME_OFFSET
+
+	} else if strings.Contains(uri, "playout-delay") {
+		return PLAYOUT_DELAY
+
+	} else if strings.Contains(uri, "repaired-rtp-stream-id") {
+		return REPAIRED_RTP_STREAM_ID
+
+	} else if strings.Contains(uri, "rtp-stream-id") {
+		return RTP_STREAM_ID
+	}
+
+	return -1
 }
