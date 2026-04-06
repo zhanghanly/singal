@@ -135,7 +135,7 @@ func (r *Room) CreateNewConsumerData(consumer *Consumer, producer *Producer, pee
 		newConsumerData.RtpParameters.MediaCodecs[1].PayloadType = 102
 		newConsumerData.RtpParameters.MediaCodecs[1].Parameters.Apt = 101
 
-		newConsumerData.Type = "simulcast"
+		//newConsumerData.Type = "simulcast"
 		newConsumerData.AppData.Source = "video"
 
 		newConsumerData.ConsumerScore.ProducerScores = append(newConsumerData.ConsumerScore.ProducerScores, 0)
@@ -150,13 +150,13 @@ func (r *Room) CreateNewConsumerData(consumer *Consumer, producer *Producer, pee
 		logger.Errorf("create consumer failed, reason=%v", err)
 	}
 
-	if len(newConsumerData.RtpParameters.Encodings) > 1 {
-		newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
-		newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
-		newConsumerData.RtpParameters.Encodings[0].Rid = ""
-		newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
-		newConsumerData.RtpParameters.Encodings[0].Active = false
-	}
+	//if len(newConsumerData.RtpParameters.Encodings) > 1 {
+	//	newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
+	//	newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
+	//	newConsumerData.RtpParameters.Encodings[0].Rid = ""
+	//	newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
+	//	newConsumerData.RtpParameters.Encodings[0].Active = false
+	//}
 
 	return newConsumerData
 }
@@ -264,7 +264,6 @@ func (r *Room) CreateWebrtcTransport(req *CreateTransportReqData, u *User) (*Cre
 
 	case "consumer":
 		r.router.saveConsumeTransportId(u.userId, res.TransportId)
-		//r.router.CreateConsumes(u.userId)
 
 	default:
 		return nil, errors.New("bad AppData direction")
@@ -306,15 +305,29 @@ func (r *Room) Produce(u *User, req *ProduceReqData) (string, error) {
 	}
 	r.router.addProducer(u.userId, producer)
 
-	if producer.kind == "audio" {
-		_, err := gRtcServer.CreateProducer(r.router, producer)
-		if err != nil {
-			logger.Errorf("create producer failed, reason=%v", err)
-		}
-
-		r.ReqOtherNewConsumer(u, producer)
-		r.ReqPullOtherNewProducer(u, producer)
+	// remove remb feedback
+	for _, codec := range producer.parameters.RtpParameters.MediaCodecs {
+		r.RemoveFeedbackRemb(codec.Feedbacks)
 	}
 
+	//if producer.kind == "video" {
+	_, err := gRtcServer.CreateProducer(r.router, producer)
+	if err != nil {
+		logger.Errorf("create producer failed, reason=%v", err)
+	}
+	//}
+	r.ReqOtherNewConsumer(u, producer)
+	r.ReqPullOtherNewProducer(u, producer)
+	//}
+
 	return producer.producerId, nil
+}
+
+func (r *Room) RemoveFeedbackRemb(feedback []RtcpFeedback) {
+	for i := 0; i < len(feedback); i++ {
+		if feedback[i].Type == "goog-remb" {
+			feedback = append(feedback[:i], feedback[i+1:]...)
+			i--
+		}
+	}
 }

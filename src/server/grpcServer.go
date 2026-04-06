@@ -253,6 +253,10 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 	for _, v := range producer.parameters.RtpParameters.MediaCodecs {
 		rtcpFeedbacks := make([]*pb.RtcpFeedback, 0)
 		for _, feedback := range v.Feedbacks {
+			if producer.kind == "audio" && feedback.Type == "nack" {
+				continue
+			}
+
 			rtcpFeedback := &pb.RtcpFeedback{
 				Type:      feedback.Type,
 				Parameter: feedback.Parameter,
@@ -284,7 +288,6 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 
 	encodings := make([]*pb.Encoding, 0)
 	for _, v := range producer.parameters.RtpParameters.Encodings {
-
 		encoding := &pb.Encoding{
 			Active:                v.Active,
 			ScalabilityMode:       v.ScalabilityMode,
@@ -295,13 +298,16 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 			Ssrc:                  v.Ssrc,
 		}
 		if producer.kind == "video" {
-			ssrc := rand.Uint32()
-			v.Ssrc = ssrc
-			v.Rtx = &Rtx{
-				Ssrc: ssrc + 1,
+			if v.Rtx == nil {
+				ssrc := rand.Uint32()
+				v.Ssrc = ssrc
+				v.Rtx = &Rtx{
+					Ssrc: ssrc + 1,
+				}
 			}
 			encoding.Ssrc = v.Ssrc
 			encoding.RtxSsrc = v.Rtx.Ssrc
+			encoding.HasRtx = true
 		}
 
 		encodings = append(encodings, encoding)

@@ -22,6 +22,10 @@ type CodecParameters struct {
 	LevelAsymmetryAllowed int    `json:"level-asymmetry-allowed,omitempty"`
 	XGoogleStartBitrate   int    `json:"x-google-start-bitrate,omitempty"`
 	Apt                   int    `json:"apt,omitempty"`
+	MinPTime              int    `json:"minptime,omitempty"`
+	UseInBandFec          int    `json:"useinbandfec,omitempty"`
+	SpropStereo           int    `json:"sprop-stereo,omitempty"`
+	UseDtx                int    `json:"usedtx,omitempty"`
 }
 
 type RtcpFeedback struct {
