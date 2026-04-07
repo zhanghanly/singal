@@ -93,14 +93,12 @@ func (u *User) ReadMessage() {
 
 func (u *User) handleGetRouterRtpCapabilities(req *WsRequest) {
 	logger.Infof("recv getRouterRtpCapabilities message")
-	//str := `{"routerRtpCapabilities":{"codecs":[{"kind":"audio","mimeType":"audio/opus","clockRate":48000,"channels":2,"rtcpFeedback":[{"type":"nack","parameter":""},{"type":"transport-cc","parameter":""}],"parameters":{},"preferredPayloadType":100},{"kind":"video","mimeType":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"ccm","parameter":"fir"},{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""}],"parameters":{"x-google-start-bitrate":1000},"preferredPayloadType":101},{"kind":"video","mimeType":"video/rtx","preferredPayloadType":102,"clockRate":90000,"parameters":{"apt":101},"rtcpFeedback":[]},{"kind":"video","mimeType":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"ccm","parameter":"fir"},{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""}],"parameters":{"profile-id":2,"x-google-start-bitrate":1000},"preferredPayloadType":103},{"kind":"video","mimeType":"video/rtx","preferredPayloadType":104,"clockRate":90000,"parameters":{"apt":103},"rtcpFeedback":[]},{"kind":"video","mimeType":"video/H264","clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"4d0032","x-google-start-bitrate":1000},"rtcpFeedback":[{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"ccm","parameter":"fir"},{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""}],"preferredPayloadType":105},{"kind":"video","mimeType":"video/rtx","preferredPayloadType":106,"clockRate":90000,"parameters":{"apt":105},"rtcpFeedback":[]},{"kind":"video","mimeType":"video/H264","clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"42e01f","x-google-start-bitrate":1000},"rtcpFeedback":[{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"ccm","parameter":"fir"},{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""}],"preferredPayloadType":107},{"kind":"video","mimeType":"video/rtx","preferredPayloadType":108,"clockRate":90000,"parameters":{"apt":107},"rtcpFeedback":[]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":2,"preferredEncrypt":false,"direction":"recvonly"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id","preferredId":3,"preferredEncrypt":false,"direction":"recvonly"},{"kind":"audio","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","preferredId":5,"preferredEncrypt":false,"direction":"recvonly"},{"kind":"video","uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","preferredId":5,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":6,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension","preferredId":7,"preferredEncrypt":false,"direction":"recvonly"},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":8,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":9,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time","preferredId":10,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time","preferredId":10,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"http://www.webrtc.org/experiments/rtp-hdrext/playout-delay","preferredId":11,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.webrtc.org/experiments/rtp-hdrext/playout-delay","preferredId":11,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"urn:mediasoup:params:rtp-hdrext:packet-id","preferredId":12,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:mediasoup:params:rtp-hdrext:packet-id","preferredId":12,"preferredEncrypt":false,"direction":"sendrecv"}]}}`
 	response := &WsResponse{
 		Id:       req.Id,
 		Response: true,
 		Ok:       true,
 		Data:     gConfig,
 	}
-	//json.Unmarshal([]byte(str), &response.Data)
 
 	u.sendResMsg <- response
 }
@@ -195,8 +193,6 @@ func (u *User) handleJoin(req *WsRequest) {
 		}
 		//notify other users
 		room.NotifyOtherUsers(u)
-		//room.ReqOtherNewDataConsumer(u)
-		//room.ReqOtherNewConsumer(u)
 	}
 
 	otherUsers := room.GetOtherUsers(u)
@@ -227,12 +223,7 @@ func (u *User) handleProduceData(req *WsRequest) {
 			var reqData ProduceDataReqData
 			err := json.Unmarshal(reqDataBytes, &reqData)
 			if err == nil {
-				//err := room.ConnectWebrtcTransport(&reqData)
-				//if err == nil {
 				response.Ok = true
-				//} else {
-				//	logger.Errorf("produce data req failed, reason=%v", err)
-				//}
 				response.Data = &ProduceDataResData{
 					DataProducerId: RandString(12),
 				}

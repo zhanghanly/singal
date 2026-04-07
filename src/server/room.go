@@ -21,6 +21,56 @@ const (
 	MEDIASOUP_PACKET_ID
 )
 
+func ChangeExtensionId(extensionIds []ProducerHeadExtension) {
+	for k, _ := range extensionIds {
+		extensionIds[k].Id = GetNewExtensionId(extensionIds[k].Uri)
+	}
+}
+
+func GetNewExtensionId(uri string) int {
+	if strings.Contains(uri, "mid") {
+		return MID
+
+	} else if strings.Contains(uri, "abs-send-time") {
+		return ABS_SEND_TIME
+
+	} else if strings.Contains(uri, "transport-wide-cc-extensions") {
+		return TRANSPORT_WIDE_CC_01
+
+	} else if strings.Contains(uri, "ssrc-audio-level") {
+		return SSRC_AUDIO_LEVEL
+
+	} else if strings.Contains(uri, "abs-capture-time") {
+		return ABS_CAPTURE_TIME
+
+	} else if strings.Contains(uri, "video-orientation") {
+		return VIDEO_ORIENTATION
+
+	} else if strings.Contains(uri, "toffset") {
+		return TIME_OFFSET
+
+	} else if strings.Contains(uri, "playout-delay") {
+		return PLAYOUT_DELAY
+
+	} else if strings.Contains(uri, "repaired-rtp-stream-id") {
+		return REPAIRED_RTP_STREAM_ID
+
+	} else if strings.Contains(uri, "rtp-stream-id") {
+		return RTP_STREAM_ID
+	}
+
+	return -1
+}
+
+func RemoveFeedbackRemb(feedback []RtcpFeedback) {
+	for i := 0; i < len(feedback); i++ {
+		if feedback[i].Type == "goog-remb" {
+			feedback = append(feedback[:i], feedback[i+1:]...)
+			i--
+		}
+	}
+}
+
 type Room struct {
 	roomId   string
 	createTs int64
@@ -166,14 +216,7 @@ func (r *Room) CreateNewConsumerData(consumer *Consumer, producer *Producer, pee
 		logger.Errorf("create consumer failed, reason=%v", err)
 	}
 
-	//if len(newConsumerData.RtpParameters.Encodings) > 1 {
-	//	newConsumerData.RtpParameters.Encodings = newConsumerData.RtpParameters.Encodings[:1]
-	//	newConsumerData.RtpParameters.Encodings[0].ScalabilityMode = "L3T3"
-	//	newConsumerData.RtpParameters.Encodings[0].Rid = ""
-	//	newConsumerData.RtpParameters.Encodings[0].ScaleResolutionDownBy = 0
-	//	newConsumerData.RtpParameters.Encodings[0].Active = false
-	//}
-	r.ChangeExtensionId(newConsumerData.RtpParameters.HeaderExtensions)
+	ChangeExtensionId(newConsumerData.RtpParameters.HeaderExtensions)
 
 	return newConsumerData
 }
@@ -324,68 +367,16 @@ func (r *Room) Produce(u *User, req *ProduceReqData) (string, error) {
 
 	// remove remb feedback
 	for _, codec := range producer.parameters.RtpParameters.MediaCodecs {
-		r.RemoveFeedbackRemb(codec.Feedbacks)
+		RemoveFeedbackRemb(codec.Feedbacks)
 	}
 
-	//if producer.kind == "video" {
 	_, err := gRtcServer.CreateProducer(r.router, producer)
 	if err != nil {
 		logger.Errorf("create producer failed, reason=%v", err)
 	}
-	//}
+
 	r.ReqOtherNewConsumer(u, producer)
 	r.ReqPullOtherNewProducer(u, producer)
-	//}
 
 	return producer.producerId, nil
-}
-
-func (r *Room) RemoveFeedbackRemb(feedback []RtcpFeedback) {
-	for i := 0; i < len(feedback); i++ {
-		if feedback[i].Type == "goog-remb" {
-			feedback = append(feedback[:i], feedback[i+1:]...)
-			i--
-		}
-	}
-}
-
-func (r *Room) ChangeExtensionId(extensionIds []ProducerHeadExtension) {
-	for k, _ := range extensionIds {
-		extensionIds[k].Id = r.GetNewExtensionId(extensionIds[k].Uri)
-	}
-}
-
-func (r *Room) GetNewExtensionId(uri string) int {
-	if strings.Contains(uri, "mid") {
-		return MID
-
-	} else if strings.Contains(uri, "abs-send-time") {
-		return ABS_SEND_TIME
-
-	} else if strings.Contains(uri, "transport-wide-cc-extensions") {
-		return TRANSPORT_WIDE_CC_01
-
-	} else if strings.Contains(uri, "ssrc-audio-level") {
-		return SSRC_AUDIO_LEVEL
-
-	} else if strings.Contains(uri, "abs-capture-time") {
-		return ABS_CAPTURE_TIME
-
-	} else if strings.Contains(uri, "video-orientation") {
-		return VIDEO_ORIENTATION
-
-	} else if strings.Contains(uri, "toffset") {
-		return TIME_OFFSET
-
-	} else if strings.Contains(uri, "playout-delay") {
-		return PLAYOUT_DELAY
-
-	} else if strings.Contains(uri, "repaired-rtp-stream-id") {
-		return REPAIRED_RTP_STREAM_ID
-
-	} else if strings.Contains(uri, "rtp-stream-id") {
-		return RTP_STREAM_ID
-	}
-
-	return -1
 }
