@@ -3,10 +3,10 @@ package singal
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 
-	// "strconv"
 	"strings"
 	"sync"
 )
@@ -19,19 +19,28 @@ type RedisTaskMgr struct {
 var gRedisTaskMgr *RedisTaskMgr
 
 func InitRedisClient() (err error) {
-	//logger.Infof("redisinit host:%s passwd:%s", gConfig.Redis.Host, gConfig.Redis.Password)
-	//gRedisClient = redis.NewClient(&redis.Options{
-	//	Addr:     gConfig.Redis.Host,
-	//	Password: gConfig.Redis.Password,
-	//	DB:       0,
-	//})
-	//gRedisTaskMgr = &RedisTaskMgr{}
+	gRedisClient = redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", gConfig.Redis.Host, gConfig.Redis.Port),
+		Password: gConfig.Redis.Password,
+		DB:       gConfig.Redis.DB,
+	})
 
-	//ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	//defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	//_, err = gRedisClient.Ping(ctx).Result()
-	return err
+	_, err = gRedisClient.Ping(ctx).Result()
+	if err != nil {
+		logger.Errorf("redis connect failed: %v", err)
+		return err
+	}
+
+	logger.Info("redis connect success")
+	gRedisTaskMgr = &RedisTaskMgr{}
+	return nil
+}
+
+func GetRedisClient() *redis.Client {
+	return gRedisClient
 }
 
 // redis key --------------------------

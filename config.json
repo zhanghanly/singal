@@ -309,9 +309,29 @@
             }
         ]
     },
-    "https" : {
-        "addr" : ":8080",
-        "key" : " ", 
-        "cert" : " "
+    "http" : {
+        "addr" : ":8000",
+        "readTimeOut" : 10,
+        "writeTimeOut" : 10,
+        "isKeepAlive" : 1
+    },
+    "database": {
+        "host": "",
+        "port": 3306,
+        "username": "",
+        "password": "",
+        "name": ""
+    },
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "password": "hanly",
+        "db": 0
+    },
+    "email": {
+        "smtp_host": "",
+        "smtp_port": 465,
+        "from_email": "",
+        "password": ""
     }
 }

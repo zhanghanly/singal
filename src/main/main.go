@@ -33,14 +33,24 @@ func main() {
 	logger.Infof("Golang Version: %s", GoVersion)
 	logger.Info("starting httpserver.")
 
+	if err := singal.InitSetting(); err != nil {
+		logger.Errorf("failed to initialize setting: %v", err)
+		return
+	}
+	if err := singal.InitRedisClient(); err != nil {
+		logger.Errorf("failed to initialize redis: %v", err)
+		return
+	}
+	if err := singal.InitAuthDB(); err != nil {
+		logger.Errorf("failed to initialize auth DB: %v", err)
+		return
+	}
+
 	singal.NewRoomManager()
-	singal.InitSetting()
-	//if err := singal.InitRedisClient(); err != nil {
-	//	return
-	//}
+	singal.InitEmailService()
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	// start WebSocket server
 	go func() {
@@ -51,6 +61,11 @@ func main() {
 	go func() {
 		defer wg.Done()
 		singal.StartGrpcServer()
+	}()
+	// start http server
+	go func() {
+		defer wg.Done()
+		singal.StartHttpServer()
 	}()
 
 	wg.Wait()

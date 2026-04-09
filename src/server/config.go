@@ -41,10 +41,11 @@ type HeaderExtension struct {
 	Direction        string `json:"direction"`
 }
 
-type Https struct {
-	Addr string `json:"addr"`
-	Cert string `json:"cert,omitempty"`
-	Key  string `json:"key,omitempty"`
+type Http struct {
+	Addr         string `json:"addr"`
+	ReadTimeOut  int    `json:"readTimeOut"`
+	WriteTimeOut int    `json:"writeTimeOut"`
+	IsKeepAlive  int    `json:"isKeepAlive"`
 }
 
 type RouterRtpCapabilities struct {
@@ -54,6 +55,32 @@ type RouterRtpCapabilities struct {
 
 type Config struct {
 	RtpCapabilities RouterRtpCapabilities `json:"routerRtpCapabilities"`
+	Http            Http                  `json:"http"`
+	Database        DatabaseConfig        `json:"database"`
+	Redis           RedisConfig           `json:"redis"`
+	Email           EmailConfig           `json:"email"`
+}
+
+type DatabaseConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
+}
+
+type RedisConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
+}
+
+type EmailConfig struct {
+	SMTPHost  string `json:"smtp_host"`
+	SMTPPort  int    `json:"smtp_port"`
+	FromEmail string `json:"from_email"`
+	Password  string `json:"password"`
 }
 
 var gConfig *Config
