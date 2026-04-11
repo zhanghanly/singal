@@ -2,9 +2,10 @@ package singal
 
 import (
 	"errors"
+	"io"
 	"math/rand"
 	"net"
-	pb "singal/src/server/proto"
+	pb "singal/src/server/proto/proto"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,85 +17,243 @@ import (
 var gRtcServer *WebRtcServer
 
 type WorkerStream struct {
-	stream  pb.WebRtcService_SyncServer
-	pending map[uint64]chan *pb.WorkerToServer
-	mu      sync.Mutex
-	worker  *Worker
+	stream    pb.WebRtcService_SyncServer
+	pending   map[uint64]chan *pb.WorkerToServer
+	mu        sync.Mutex
+	worker    *Worker
+	workerMgr *WorkerManager
 }
 
 type WebRtcServer struct {
 	pb.UnimplementedWebRtcServiceServer
-	workers sync.Map // map[string]*WorkerStream
+	workers sync.Map
 	nextID  uint64
 }
 
 func NewWebRtcServer() *WebRtcServer {
-	return &WebRtcServer{}
+	InitWorkerManager()
+	return &WebRtcServer{
+		workers: sync.Map{},
+	}
 }
 
 func (s *WebRtcServer) Sync(stream pb.WebRtcService_SyncServer) error {
-	logger.Infof("begin to recv grpc peer message")
-	//firstReq, err := stream.Recv()
-	_, err := stream.Recv()
-	if err != nil {
-		logger.Infof("recv grpc peer message failed, %v", err)
-		return err
-	}
-	//workerID := firstReq.SeqId
-	workerID := "1"
-
-	ws := &WorkerStream{
-		stream:  stream,
-		pending: make(map[uint64]chan *pb.WorkerToServer),
-		worker: &Worker{
-			publicIp:      "172.20.10.8",
-			inUsePort:     44444,
-			preferenceUdp: true,
-			routers:       make(map[string]*Router),
-		},
-	}
-	s.workers.Store(workerID, ws)
-	defer s.workers.Delete(workerID)
-
-	logger.Infof("Worker %s connected", workerID)
+	workerID := ""
+	var ws *WorkerStream
 
 	for {
-		resp, err := stream.Recv()
+		msg, err := stream.Recv()
 		if err != nil {
-			logger.Errorf("Worker %s disconnected: %v", workerID, err)
+			if err == io.EOF {
+				if workerID != "" {
+					GetWorkerManager().RemoveWorker(workerID)
+					s.workers.Delete(workerID)
+					logger.Infof("Worker %s stream ended", workerID)
+				}
+				return nil
+			}
+			logger.Errorf("Error receiving from worker: %v", err)
+			if workerID != "" {
+				GetWorkerManager().RemoveWorker(workerID)
+				s.workers.Delete(workerID)
+			}
 			return err
 		}
 
-		ws.mu.Lock()
-		if ch, ok := ws.pending[resp.SeqId]; ok {
-			ch <- resp
-			delete(ws.pending, resp.SeqId)
+		switch payload := msg.Payload.(type) {
+		case *pb.WorkerToServer_WorkerRegister:
+			if workerID != "" {
+				GetWorkerManager().RemoveWorker(workerID)
+				s.workers.Delete(workerID)
+			}
+			workerID = payload.WorkerRegister.WorkerId
+			wm := GetWorkerManager()
+			worker, err := wm.RegisterWorker(
+				payload.WorkerRegister.WorkerId,
+				payload.WorkerRegister.PublicIp,
+				payload.WorkerRegister.PublicPort,
+				payload.WorkerRegister.UseUdp,
+			)
+			if err != nil {
+				logger.Errorf("Failed to register worker: %v", err)
+				return err
+			}
+
+			ws = &WorkerStream{
+				stream:    stream,
+				pending:   make(map[uint64]chan *pb.WorkerToServer),
+				worker:    worker,
+				workerMgr: wm,
+			}
+			s.workers.Store(workerID, ws)
+
+			resp := &pb.ServerToWorker{
+				SeqId: msg.SeqId,
+				Payload: &pb.ServerToWorker_WorkerRegisterRes{
+					WorkerRegisterRes: &pb.WorkerRegisterResponse{
+						WorkerId:    workerID,
+						Success:     true,
+						ErrorDetail: "",
+					},
+				},
+			}
+			if err := stream.Send(resp); err != nil {
+				logger.Errorf("Failed to send register response: %v", err)
+				return err
+			}
+			logger.Infof("Worker %s registered successfully", workerID)
+
+		case *pb.WorkerToServer_WorkerKeepalive:
+			logger.Info("recieve keepalive message")
+			if payload.WorkerKeepalive == nil {
+				continue
+			}
+			workerID = payload.WorkerKeepalive.WorkerId
+			wm := GetWorkerManager()
+			success := wm.Heartbeat(workerID)
+			if success {
+				if ws != nil {
+					ws.workerMgr.UpdateWorkerStats(
+						workerID,
+						payload.WorkerKeepalive.RouterCount,
+						payload.WorkerKeepalive.CpuUsage,
+						payload.WorkerKeepalive.MemoryUsage,
+					)
+				}
+			}
+
+			resp := &pb.ServerToWorker{
+				SeqId: msg.SeqId,
+				Payload: &pb.ServerToWorker_WorkerKeepaliveRes{
+					WorkerKeepaliveRes: &pb.WorkerKeepaliveResponse{
+						Success: success,
+					},
+				},
+			}
+			if ws != nil {
+				if err := ws.stream.Send(resp); err != nil {
+					logger.Errorf("Failed to send heartbeat response: %v", err)
+				}
+			}
+
+		case *pb.WorkerToServer_CreateRouterRes:
+			if ws != nil {
+				ws.mu.Lock()
+				if ch, ok := ws.pending[msg.SeqId]; ok {
+					ch <- msg
+					delete(ws.pending, msg.SeqId)
+				}
+				ws.mu.Unlock()
+			}
+
+		case *pb.WorkerToServer_CreateTransportRes:
+			if ws != nil {
+				ws.mu.Lock()
+				if ch, ok := ws.pending[msg.SeqId]; ok {
+					ch <- msg
+					delete(ws.pending, msg.SeqId)
+				}
+				ws.mu.Unlock()
+			}
+
+		case *pb.WorkerToServer_ConnectTransportRes:
+			if ws != nil {
+				ws.mu.Lock()
+				if ch, ok := ws.pending[msg.SeqId]; ok {
+					ch <- msg
+					delete(ws.pending, msg.SeqId)
+				}
+				ws.mu.Unlock()
+			}
+
+		case *pb.WorkerToServer_ProduceRes:
+			if ws != nil {
+				ws.mu.Lock()
+				if ch, ok := ws.pending[msg.SeqId]; ok {
+					ch <- msg
+					delete(ws.pending, msg.SeqId)
+				}
+				ws.mu.Unlock()
+			}
+
+		case *pb.WorkerToServer_ConsumerRes:
+			if ws != nil {
+				ws.mu.Lock()
+				if ch, ok := ws.pending[msg.SeqId]; ok {
+					ch <- msg
+					delete(ws.pending, msg.SeqId)
+				}
+				ws.mu.Unlock()
+			}
 		}
-		ws.mu.Unlock()
 	}
 }
 
-func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
-	workerId := s.chooseBestWorker()
+func (s *WebRtcServer) getWorkerStream(workerId string) (*WorkerStream, error) {
 	val, ok := s.workers.Load(workerId)
 	if !ok {
 		return nil, errors.New("worker offline")
 	}
-	conn := val.(*WorkerStream)
+	return val.(*WorkerStream), nil
+}
+
+func (s *WebRtcServer) sendRequest(workerId string, msg *pb.ServerToWorker) (*pb.WorkerToServer, error) {
+	ws, err := s.getWorkerStream(workerId)
+	if err != nil {
+		return nil, err
+	}
 
 	seqID := atomic.AddUint64(&s.nextID, 1)
+	msg.SeqId = seqID
+
 	resCh := make(chan *pb.WorkerToServer, 1)
 
-	conn.mu.Lock()
-	conn.pending[seqID] = resCh
-	conn.mu.Unlock()
+	ws.mu.Lock()
+	ws.pending[seqID] = resCh
+	ws.mu.Unlock()
 
-	router := conn.worker.CreateRouter()
+	if err := ws.stream.Send(msg); err != nil {
+		ws.mu.Lock()
+		delete(ws.pending, seqID)
+		ws.mu.Unlock()
+		return nil, err
+	}
+
+	select {
+	case resMsg := <-resCh:
+		return resMsg, nil
+	case <-time.After(10 * time.Second):
+		ws.mu.Lock()
+		delete(ws.pending, seqID)
+		ws.mu.Unlock()
+		return nil, errors.New("request timeout")
+	}
+}
+
+func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
+	worker := GetWorkerManager().ChooseBestWorker()
+	if worker == nil {
+		return nil, errors.New("no available worker")
+	}
+
+	router := &Router{
+		routerId:            RandString(36),
+		publicIp:            worker.publicIp,
+		port:                worker.publicPort,
+		preferenceUdp:       worker.useUdp,
+		sendBufSize:         1024,
+		recvBufSize:         1024,
+		workerId:            worker.workerId,
+		producers:           make(map[string][]*Producer),
+		consumers:           make(map[string][]*Consumer),
+		produceTransportIds: make(map[string]string),
+		consumeTransportIds: make(map[string]string),
+	}
+
 	serverMsg := &pb.ServerToWorker{
-		SeqId: seqID,
 		Payload: &pb.ServerToWorker_CreateRouterReq{
 			CreateRouterReq: &pb.CreateRouterRequest{
-				WorkerId: workerId,
+				WorkerId: worker.workerId,
 				RoomId:   router.routerId,
 				ServerId: RandString(10),
 				Info: &pb.ListenInfo{
@@ -113,85 +272,55 @@ func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
 			},
 		},
 	}
-	if err := conn.stream.Send(serverMsg); err != nil {
+
+	resMsg, err := s.sendRequest(worker.workerId, serverMsg)
+	if err != nil {
 		return nil, err
 	}
 
-	// wait or timeout
-	select {
-	case resMsg := <-resCh:
-		res := resMsg.GetCreateRouterRes()
-		if !res.Success {
-			return nil, errors.New(res.ErrorDetail)
-		}
-
-		conn.worker.AddRouter(router)
-		return router, nil
-
-	case <-time.After(5 * time.Second):
-		return nil, errors.New("request timeout")
+	res := resMsg.GetCreateRouterRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
 	}
+
+	GetWorkerManager().AddRouter(worker.workerId, router)
+	logger.Infof("Router created on worker %s: routerId=%s", worker.workerId, router.routerId)
+
+	return router, nil
 }
 
 func (s *WebRtcServer) CreateWebrtcTransport(router *Router) (*pb.CreateTransportResponse, error) {
-	//workerId := router.workerId
-	workerId := "1"
-	val, ok := s.workers.Load(workerId)
-	if !ok {
-		return nil, errors.New("worker offline")
+	if router == nil || router.workerId == "" {
+		return nil, errors.New("invalid router")
 	}
-	conn := val.(*WorkerStream)
-
-	seqID := atomic.AddUint64(&s.nextID, 1)
-	resCh := make(chan *pb.WorkerToServer, 1)
-
-	conn.mu.Lock()
-	conn.pending[seqID] = resCh
-	conn.mu.Unlock()
 
 	serverMsg := &pb.ServerToWorker{
-		SeqId: seqID,
 		Payload: &pb.ServerToWorker_CreateTransportReq{
 			CreateTransportReq: &pb.CreateTransportRequest{
-				WorkerId:    workerId,
+				WorkerId:    router.workerId,
 				RouterId:    router.routerId,
 				TransportId: RandString(36),
 			},
 		},
 	}
-	if err := conn.stream.Send(serverMsg); err != nil {
+
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
 		return nil, err
 	}
 
-	// wait or timeout
-	select {
-	case resMsg := <-resCh:
-		res := resMsg.GetCreateTransportRes()
-		if !res.Success {
-			return nil, errors.New(res.ErrorDetail)
-		}
-
-		return res, nil
-
-	case <-time.After(5 * time.Second):
-		return nil, errors.New("request timeout")
+	res := resMsg.GetCreateTransportRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
 	}
+
+	return res, nil
 }
 
 func (s *WebRtcServer) ConnectWebrtcTransport(router *Router, req *ConnectTransportReqData) error {
-	workerId := "1"
-	val, ok := s.workers.Load(workerId)
-	if !ok {
-		return errors.New("worker offline")
+	if router == nil || router.workerId == "" {
+		return errors.New("invalid router")
 	}
-	conn := val.(*WorkerStream)
-
-	seqID := atomic.AddUint64(&s.nextID, 1)
-	resCh := make(chan *pb.WorkerToServer, 1)
-
-	conn.mu.Lock()
-	conn.pending[seqID] = resCh
-	conn.mu.Unlock()
 
 	dtlsFingerprints := make([]*pb.DtlsFingerprint, 0)
 	for _, v := range req.DTLSParameters.Fingerprints {
@@ -201,11 +330,11 @@ func (s *WebRtcServer) ConnectWebrtcTransport(router *Router, req *ConnectTransp
 		}
 		dtlsFingerprints = append(dtlsFingerprints, fingerprint)
 	}
+
 	serverMsg := &pb.ServerToWorker{
-		SeqId: seqID,
 		Payload: &pb.ServerToWorker_ConnectTransportReq{
 			ConnectTransportReq: &pb.ConnectTransportRequest{
-				WorkerId:         workerId,
+				WorkerId:         router.workerId,
 				RouterId:         router.routerId,
 				TransportId:      req.TransportId,
 				DtlsRole:         req.DTLSParameters.Role,
@@ -214,40 +343,23 @@ func (s *WebRtcServer) ConnectWebrtcTransport(router *Router, req *ConnectTransp
 		},
 	}
 
-	if err := conn.stream.Send(serverMsg); err != nil {
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
 		return err
 	}
 
-	// wait or timeout
-	select {
-	case resMsg := <-resCh:
-		res := resMsg.GetConnectTransportRes()
-		if !res.Success {
-			return errors.New(res.ErrorDetail)
-		}
-
-		return nil
-
-	case <-time.After(5 * time.Second):
-		return errors.New("request timeout")
+	res := resMsg.GetConnectTransportRes()
+	if !res.Success {
+		return errors.New(res.ErrorDetail)
 	}
+
+	return nil
 }
 
 func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.ProduceResponse, error) {
-	//workerId := router.workerId
-	workerId := "1"
-	val, ok := s.workers.Load(workerId)
-	if !ok {
-		return nil, errors.New("worker offline")
+	if router == nil || router.workerId == "" {
+		return nil, errors.New("invalid router")
 	}
-	conn := val.(*WorkerStream)
-
-	seqID := atomic.AddUint64(&s.nextID, 1)
-	resCh := make(chan *pb.WorkerToServer, 1)
-
-	conn.mu.Lock()
-	conn.pending[seqID] = resCh
-	conn.mu.Unlock()
 
 	codecs := make([]*pb.Codec, 0)
 	for _, v := range producer.parameters.RtpParameters.MediaCodecs {
@@ -282,7 +394,6 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 			Id:      uint32(v.Id),
 			Encrypt: v.Encrypt,
 		}
-
 		headerExtensions = append(headerExtensions, headerExtension)
 	}
 
@@ -323,7 +434,6 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 			Ssrc:       v.Ssrc,
 			MappedSsrc: v.Ssrc,
 		}
-
 		rtpMappings.EncodingMap = append(rtpMappings.EncodingMap, encodingMap)
 	}
 
@@ -340,7 +450,6 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 	}
 
 	serverMsg := &pb.ServerToWorker{
-		SeqId: seqID,
 		Payload: &pb.ServerToWorker_ProduceReq{
 			ProduceReq: &pb.ProduceRequest{
 				RouterId:    router.routerId,
@@ -362,40 +471,24 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 			},
 		},
 	}
-	if err := conn.stream.Send(serverMsg); err != nil {
+
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
 		return nil, err
 	}
 
-	// wait or timeout
-	select {
-	case resMsg := <-resCh:
-		res := resMsg.GetProduceRes()
-		if !res.Success {
-			return nil, errors.New(res.ErrorDetail)
-		}
-
-		return res, nil
-
-	case <-time.After(5 * time.Second):
-		return nil, errors.New("request timeout")
+	res := resMsg.GetProduceRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
 	}
+
+	return res, nil
 }
 
 func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerReqData) (*pb.ConsumeResponse, error) {
-	//workerId := router.workerId
-	workerId := "1"
-	val, ok := s.workers.Load(workerId)
-	if !ok {
-		return nil, errors.New("worker offline")
+	if router == nil || router.workerId == "" {
+		return nil, errors.New("invalid router")
 	}
-	conn := val.(*WorkerStream)
-
-	seqID := atomic.AddUint64(&s.nextID, 1)
-	resCh := make(chan *pb.WorkerToServer, 1)
-
-	conn.mu.Lock()
-	conn.pending[seqID] = resCh
-	conn.mu.Unlock()
 
 	codecs := make([]*pb.Codec, 0)
 	for _, v := range consumerReq.RtpParameters.MediaCodecs {
@@ -426,11 +519,9 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 			Id:      uint32(v.Id),
 			Encrypt: v.Encrypt,
 		}
-
 		headerExtensions = append(headerExtensions, headerExtension)
 	}
 
-	logger.Infof("len consumerReq.RtpParameters.Encodings=%d", len(consumerReq.RtpParameters.Encodings))
 	encodings := make([]*pb.Encoding, 0)
 	for _, v := range consumerReq.RtpParameters.Encodings {
 		encoding := &pb.Encoding{
@@ -447,11 +538,7 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 			encoding.HasRtx = true
 			encoding.RtxSsrc = v.Rtx.Ssrc
 		}
-
 		encodings = append(encodings, encoding)
-		//if consumerReq.Kind == "video" {
-		//	break
-		//}
 	}
 
 	rtpMappings := &pb.RtpMapping{
@@ -464,7 +551,6 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 			Ssrc:       v.Ssrc,
 			MappedSsrc: v.Ssrc,
 		}
-
 		rtpMappings.EncodingMap = append(rtpMappings.EncodingMap, encodingMap)
 	}
 
@@ -481,7 +567,6 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 	}
 
 	serverMsg := &pb.ServerToWorker{
-		SeqId: seqID,
 		Payload: &pb.ServerToWorker_ConsumerReq{
 			ConsumerReq: &pb.ConsumeRequest{
 				RouterId:    router.routerId,
@@ -504,33 +589,25 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 			},
 		},
 	}
-	if err := conn.stream.Send(serverMsg); err != nil {
+
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
 		return nil, err
 	}
 
-	// wait or timeout
-	select {
-	case resMsg := <-resCh:
-		res := resMsg.GetConsumerRes()
-		if !res.Success {
-			return nil, errors.New(res.ErrorDetail)
-		}
-
-		return res, nil
-
-	case <-time.After(5 * time.Second):
-		return nil, errors.New("request timeout")
+	res := resMsg.GetConsumerRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
 	}
-}
 
-func (s *WebRtcServer) chooseBestWorker() string {
-	return "1"
+	return res, nil
 }
 
 func StartGrpcServer() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		logger.Errorf("failed to listen: %v", err)
+		return
 	}
 
 	grpcServer := grpc.NewServer(

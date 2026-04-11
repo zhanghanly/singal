@@ -190,22 +190,51 @@ message ConsumeResponse {
   string error_detail = 5;
 }
 
+message WorkerRegister {
+  string worker_id = 1;
+  string public_ip = 2;
+  uint32 public_port = 3;
+  bool   use_udp = 4;
+  uint32 router_count = 5;
+  uint32 cpu_usage = 6;
+  uint32 memory_usage = 7;
+}
+
+message WorkerKeepalive {
+  string worker_id = 1;
+  uint32 router_count = 2;
+  uint32 cpu_usage = 3;
+  uint32 memory_usage = 4;
+}
+
+message WorkerRegisterResponse {
+  string worker_id = 1;
+  bool success = 2;
+  string error_detail = 3;
+}
+
+message WorkerKeepaliveResponse {
+  bool success = 1;
+}
+
 message WorkerToServer {
   uint64 seq_id = 1;
-  
+
   oneof payload {
     CreateRouterResponse create_router_res = 2;
     CreateTransportResponse create_transport_res =3;
     ConnectTransportResponse connect_transport_res =4;
     ProduceResponse produce_res = 5;
     ConsumeResponse consumer_res = 6;
-    string stats_push = 7; 
+    WorkerRegister worker_register = 7;
+    WorkerKeepalive worker_keepalive = 8;
+    string stats_push = 9;
   }
 }
 
 message ServerToWorker {
   uint64 seq_id = 1;
-  
+
   oneof payload {
     CreateRouterRequest create_router_req = 2;
     CreateTransportRequest create_transport_req =3;
@@ -213,6 +242,8 @@ message ServerToWorker {
     ProduceRequest produce_req = 5;
     ConsumeRequest consumer_req = 6;
     string global_notification = 7;
+    WorkerRegisterResponse worker_register_res = 8;
+    WorkerKeepaliveResponse worker_keepalive_res = 9;
   }
 }
 

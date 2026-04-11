@@ -1789,6 +1789,9 @@ type WorkerRegister struct {
 	PublicIp      string                 `protobuf:"bytes,2,opt,name=public_ip,json=publicIp,proto3" json:"public_ip,omitempty"`
 	PublicPort    uint32                 `protobuf:"varint,3,opt,name=public_port,json=publicPort,proto3" json:"public_port,omitempty"`
 	UseUdp        bool                   `protobuf:"varint,4,opt,name=use_udp,json=useUdp,proto3" json:"use_udp,omitempty"`
+	RouterCount   uint32                 `protobuf:"varint,5,opt,name=router_count,json=routerCount,proto3" json:"router_count,omitempty"`
+	CpuUsage      uint32                 `protobuf:"varint,6,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
+	MemoryUsage   uint32                 `protobuf:"varint,7,opt,name=memory_usage,json=memoryUsage,proto3" json:"memory_usage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1851,9 +1854,33 @@ func (x *WorkerRegister) GetUseUdp() bool {
 	return false
 }
 
+func (x *WorkerRegister) GetRouterCount() uint32 {
+	if x != nil {
+		return x.RouterCount
+	}
+	return 0
+}
+
+func (x *WorkerRegister) GetCpuUsage() uint32 {
+	if x != nil {
+		return x.CpuUsage
+	}
+	return 0
+}
+
+func (x *WorkerRegister) GetMemoryUsage() uint32 {
+	if x != nil {
+		return x.MemoryUsage
+	}
+	return 0
+}
+
 type WorkerKeepalive struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	RouterCount   uint32                 `protobuf:"varint,2,opt,name=router_count,json=routerCount,proto3" json:"router_count,omitempty"`
+	CpuUsage      uint32                 `protobuf:"varint,3,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
+	MemoryUsage   uint32                 `protobuf:"varint,4,opt,name=memory_usage,json=memoryUsage,proto3" json:"memory_usage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1895,6 +1922,131 @@ func (x *WorkerKeepalive) GetWorkerId() string {
 	return ""
 }
 
+func (x *WorkerKeepalive) GetRouterCount() uint32 {
+	if x != nil {
+		return x.RouterCount
+	}
+	return 0
+}
+
+func (x *WorkerKeepalive) GetCpuUsage() uint32 {
+	if x != nil {
+		return x.CpuUsage
+	}
+	return 0
+}
+
+func (x *WorkerKeepalive) GetMemoryUsage() uint32 {
+	if x != nil {
+		return x.MemoryUsage
+	}
+	return 0
+}
+
+type WorkerRegisterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorDetail   string                 `protobuf:"bytes,3,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkerRegisterResponse) Reset() {
+	*x = WorkerRegisterResponse{}
+	mi := &file_singal_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkerRegisterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkerRegisterResponse) ProtoMessage() {}
+
+func (x *WorkerRegisterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkerRegisterResponse.ProtoReflect.Descriptor instead.
+func (*WorkerRegisterResponse) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *WorkerRegisterResponse) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *WorkerRegisterResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *WorkerRegisterResponse) GetErrorDetail() string {
+	if x != nil {
+		return x.ErrorDetail
+	}
+	return ""
+}
+
+type WorkerKeepaliveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkerKeepaliveResponse) Reset() {
+	*x = WorkerKeepaliveResponse{}
+	mi := &file_singal_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkerKeepaliveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkerKeepaliveResponse) ProtoMessage() {}
+
+func (x *WorkerKeepaliveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_singal_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkerKeepaliveResponse.ProtoReflect.Descriptor instead.
+func (*WorkerKeepaliveResponse) Descriptor() ([]byte, []int) {
+	return file_singal_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *WorkerKeepaliveResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 type WorkerToServer struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	SeqId uint64                 `protobuf:"varint,1,opt,name=seq_id,json=seqId,proto3" json:"seq_id,omitempty"`
@@ -1915,7 +2067,7 @@ type WorkerToServer struct {
 
 func (x *WorkerToServer) Reset() {
 	*x = WorkerToServer{}
-	mi := &file_singal_proto_msgTypes[24]
+	mi := &file_singal_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1927,7 +2079,7 @@ func (x *WorkerToServer) String() string {
 func (*WorkerToServer) ProtoMessage() {}
 
 func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[24]
+	mi := &file_singal_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1940,7 +2092,7 @@ func (x *WorkerToServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerToServer.ProtoReflect.Descriptor instead.
 func (*WorkerToServer) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{24}
+	return file_singal_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *WorkerToServer) GetSeqId() uint64 {
@@ -2092,6 +2244,8 @@ type ServerToWorker struct {
 	//	*ServerToWorker_ProduceReq
 	//	*ServerToWorker_ConsumerReq
 	//	*ServerToWorker_GlobalNotification
+	//	*ServerToWorker_WorkerRegisterRes
+	//	*ServerToWorker_WorkerKeepaliveRes
 	Payload       isServerToWorker_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2099,7 +2253,7 @@ type ServerToWorker struct {
 
 func (x *ServerToWorker) Reset() {
 	*x = ServerToWorker{}
-	mi := &file_singal_proto_msgTypes[25]
+	mi := &file_singal_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2111,7 +2265,7 @@ func (x *ServerToWorker) String() string {
 func (*ServerToWorker) ProtoMessage() {}
 
 func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
-	mi := &file_singal_proto_msgTypes[25]
+	mi := &file_singal_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2124,7 +2278,7 @@ func (x *ServerToWorker) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerToWorker.ProtoReflect.Descriptor instead.
 func (*ServerToWorker) Descriptor() ([]byte, []int) {
-	return file_singal_proto_rawDescGZIP(), []int{25}
+	return file_singal_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ServerToWorker) GetSeqId() uint64 {
@@ -2195,6 +2349,24 @@ func (x *ServerToWorker) GetGlobalNotification() string {
 	return ""
 }
 
+func (x *ServerToWorker) GetWorkerRegisterRes() *WorkerRegisterResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*ServerToWorker_WorkerRegisterRes); ok {
+			return x.WorkerRegisterRes
+		}
+	}
+	return nil
+}
+
+func (x *ServerToWorker) GetWorkerKeepaliveRes() *WorkerKeepaliveResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*ServerToWorker_WorkerKeepaliveRes); ok {
+			return x.WorkerKeepaliveRes
+		}
+	}
+	return nil
+}
+
 type isServerToWorker_Payload interface {
 	isServerToWorker_Payload()
 }
@@ -2223,6 +2395,14 @@ type ServerToWorker_GlobalNotification struct {
 	GlobalNotification string `protobuf:"bytes,7,opt,name=global_notification,json=globalNotification,proto3,oneof"`
 }
 
+type ServerToWorker_WorkerRegisterRes struct {
+	WorkerRegisterRes *WorkerRegisterResponse `protobuf:"bytes,8,opt,name=worker_register_res,json=workerRegisterRes,proto3,oneof"`
+}
+
+type ServerToWorker_WorkerKeepaliveRes struct {
+	WorkerKeepaliveRes *WorkerKeepaliveResponse `protobuf:"bytes,9,opt,name=worker_keepalive_res,json=workerKeepaliveRes,proto3,oneof"`
+}
+
 func (*ServerToWorker_CreateRouterReq) isServerToWorker_Payload() {}
 
 func (*ServerToWorker_CreateTransportReq) isServerToWorker_Payload() {}
@@ -2234,6 +2414,10 @@ func (*ServerToWorker_ProduceReq) isServerToWorker_Payload() {}
 func (*ServerToWorker_ConsumerReq) isServerToWorker_Payload() {}
 
 func (*ServerToWorker_GlobalNotification) isServerToWorker_Payload() {}
+
+func (*ServerToWorker_WorkerRegisterRes) isServerToWorker_Payload() {}
+
+func (*ServerToWorker_WorkerKeepaliveRes) isServerToWorker_Payload() {}
 
 var File_singal_proto protoreflect.FileDescriptor
 
@@ -2398,15 +2582,27 @@ const file_singal_proto_rawDesc = "" +
 	"producerId\x12%\n" +
 	"\x04kind\x18\x03 \x01(\x0e2\x11.server.MediaKindR\x04kind\x12\x18\n" +
 	"\asuccess\x18\x04 \x01(\bR\asuccess\x12!\n" +
-	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\x84\x01\n" +
+	"\ferror_detail\x18\x05 \x01(\tR\verrorDetail\"\xe7\x01\n" +
 	"\x0eWorkerRegister\x12\x1b\n" +
 	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x1b\n" +
 	"\tpublic_ip\x18\x02 \x01(\tR\bpublicIp\x12\x1f\n" +
 	"\vpublic_port\x18\x03 \x01(\rR\n" +
 	"publicPort\x12\x17\n" +
-	"\ause_udp\x18\x04 \x01(\bR\x06useUdp\".\n" +
+	"\ause_udp\x18\x04 \x01(\bR\x06useUdp\x12!\n" +
+	"\frouter_count\x18\x05 \x01(\rR\vrouterCount\x12\x1b\n" +
+	"\tcpu_usage\x18\x06 \x01(\rR\bcpuUsage\x12!\n" +
+	"\fmemory_usage\x18\a \x01(\rR\vmemoryUsage\"\x91\x01\n" +
 	"\x0fWorkerKeepalive\x12\x1b\n" +
-	"\tworker_id\x18\x01 \x01(\tR\bworkerId\"\xcf\x04\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12!\n" +
+	"\frouter_count\x18\x02 \x01(\rR\vrouterCount\x12\x1b\n" +
+	"\tcpu_usage\x18\x03 \x01(\rR\bcpuUsage\x12!\n" +
+	"\fmemory_usage\x18\x04 \x01(\rR\vmemoryUsage\"r\n" +
+	"\x16WorkerRegisterResponse\x12\x1b\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
+	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"3\n" +
+	"\x17WorkerKeepaliveResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xcf\x04\n" +
 	"\x0eWorkerToServer\x12\x15\n" +
 	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12J\n" +
 	"\x11create_router_res\x18\x02 \x01(\v2\x1c.server.CreateRouterResponseH\x00R\x0fcreateRouterRes\x12S\n" +
@@ -2419,7 +2615,7 @@ const file_singal_proto_rawDesc = "" +
 	"\x10worker_keepalive\x18\b \x01(\v2\x17.server.WorkerKeepaliveH\x00R\x0fworkerKeepalive\x12\x1f\n" +
 	"\n" +
 	"stats_push\x18\t \x01(\tH\x00R\tstatsPushB\t\n" +
-	"\apayload\"\xd3\x03\n" +
+	"\apayload\"\xfa\x04\n" +
 	"\x0eServerToWorker\x12\x15\n" +
 	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12I\n" +
 	"\x11create_router_req\x18\x02 \x01(\v2\x1b.server.CreateRouterRequestH\x00R\x0fcreateRouterReq\x12R\n" +
@@ -2428,7 +2624,9 @@ const file_singal_proto_rawDesc = "" +
 	"\vproduce_req\x18\x05 \x01(\v2\x16.server.ProduceRequestH\x00R\n" +
 	"produceReq\x12;\n" +
 	"\fconsumer_req\x18\x06 \x01(\v2\x16.server.ConsumeRequestH\x00R\vconsumerReq\x121\n" +
-	"\x13global_notification\x18\a \x01(\tH\x00R\x12globalNotificationB\t\n" +
+	"\x13global_notification\x18\a \x01(\tH\x00R\x12globalNotification\x12P\n" +
+	"\x13worker_register_res\x18\b \x01(\v2\x1e.server.WorkerRegisterResponseH\x00R\x11workerRegisterRes\x12S\n" +
+	"\x14worker_keepalive_res\x18\t \x01(\v2\x1f.server.WorkerKeepaliveResponseH\x00R\x12workerKeepaliveResB\t\n" +
 	"\apayload*d\n" +
 	"\x12TransportDirection\x12\x12\n" +
 	"\x0eDIRECTION_AUTO\x10\x00\x12\x12\n" +
@@ -2454,7 +2652,7 @@ func file_singal_proto_rawDescGZIP() []byte {
 }
 
 var file_singal_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_singal_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_singal_proto_goTypes = []any{
 	(TransportDirection)(0),          // 0: server.TransportDirection
 	(MediaKind)(0),                   // 1: server.MediaKind
@@ -2482,8 +2680,10 @@ var file_singal_proto_goTypes = []any{
 	(*ConsumeResponse)(nil),          // 23: server.ConsumeResponse
 	(*WorkerRegister)(nil),           // 24: server.WorkerRegister
 	(*WorkerKeepalive)(nil),          // 25: server.WorkerKeepalive
-	(*WorkerToServer)(nil),           // 26: server.WorkerToServer
-	(*ServerToWorker)(nil),           // 27: server.ServerToWorker
+	(*WorkerRegisterResponse)(nil),   // 26: server.WorkerRegisterResponse
+	(*WorkerKeepaliveResponse)(nil),  // 27: server.WorkerKeepaliveResponse
+	(*WorkerToServer)(nil),           // 28: server.WorkerToServer
+	(*ServerToWorker)(nil),           // 29: server.ServerToWorker
 }
 var file_singal_proto_depIdxs = []int32{
 	2,  // 0: server.CreateRouterRequest.info:type_name -> server.ListenInfo
@@ -2514,13 +2714,15 @@ var file_singal_proto_depIdxs = []int32{
 	9,  // 25: server.ServerToWorker.connect_transport_req:type_name -> server.ConnectTransportRequest
 	20, // 26: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest
 	22, // 27: server.ServerToWorker.consumer_req:type_name -> server.ConsumeRequest
-	26, // 28: server.WebRtcService.Sync:input_type -> server.WorkerToServer
-	27, // 29: server.WebRtcService.Sync:output_type -> server.ServerToWorker
-	29, // [29:30] is the sub-list for method output_type
-	28, // [28:29] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	26, // 28: server.ServerToWorker.worker_register_res:type_name -> server.WorkerRegisterResponse
+	27, // 29: server.ServerToWorker.worker_keepalive_res:type_name -> server.WorkerKeepaliveResponse
+	28, // 30: server.WebRtcService.Sync:input_type -> server.WorkerToServer
+	29, // 31: server.WebRtcService.Sync:output_type -> server.ServerToWorker
+	31, // [31:32] is the sub-list for method output_type
+	30, // [30:31] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_singal_proto_init() }
@@ -2528,7 +2730,7 @@ func file_singal_proto_init() {
 	if File_singal_proto != nil {
 		return
 	}
-	file_singal_proto_msgTypes[24].OneofWrappers = []any{
+	file_singal_proto_msgTypes[26].OneofWrappers = []any{
 		(*WorkerToServer_CreateRouterRes)(nil),
 		(*WorkerToServer_CreateTransportRes)(nil),
 		(*WorkerToServer_ConnectTransportRes)(nil),
@@ -2538,13 +2740,15 @@ func file_singal_proto_init() {
 		(*WorkerToServer_WorkerKeepalive)(nil),
 		(*WorkerToServer_StatsPush)(nil),
 	}
-	file_singal_proto_msgTypes[25].OneofWrappers = []any{
+	file_singal_proto_msgTypes[27].OneofWrappers = []any{
 		(*ServerToWorker_CreateRouterReq)(nil),
 		(*ServerToWorker_CreateTransportReq)(nil),
 		(*ServerToWorker_ConnectTransportReq)(nil),
 		(*ServerToWorker_ProduceReq)(nil),
 		(*ServerToWorker_ConsumerReq)(nil),
 		(*ServerToWorker_GlobalNotification)(nil),
+		(*ServerToWorker_WorkerRegisterRes)(nil),
+		(*ServerToWorker_WorkerKeepaliveRes)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2552,7 +2756,7 @@ func file_singal_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_singal_proto_rawDesc), len(file_singal_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

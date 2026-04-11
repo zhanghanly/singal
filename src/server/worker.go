@@ -1,6 +1,10 @@
 package singal
 
-import "strconv"
+import (
+	"strconv"
+	"sync"
+	"time"
+)
 
 type MediaType int32
 
@@ -158,50 +162,25 @@ func (r *Router) getConsumerStreamMid(userId string) string {
 	return strconv.Itoa(size)
 }
 
+type WorkerStatus int32
+
+const (
+	WorkerStatusOffline WorkerStatus = 0
+	WorkerStatusOnline  WorkerStatus = 1
+	WorkerStatusBusy    WorkerStatus = 2
+)
+
 type Worker struct {
 	workerId      string
 	publicIp      string
-	minPort       uint32
-	inUsePort     uint32
-	maxPort       uint32
-	lastAlive     int64
-	preferenceUdp bool
+	publicPort    uint32
+	useUdp        bool
+	status        WorkerStatus
+	routerCount   uint32
+	cpuUsage      uint32
+	memoryUsage   uint32
+	lastHeartbeat time.Time
+	stream        interface{}
 	routers       map[string]*Router
-}
-
-func (w *Worker) CreateRouter() *Router {
-	router := &Router{
-		routerId:            w.CreateRouterId(),
-		publicIp:            w.publicIp,
-		port:                w.inUsePort + 1,
-		preferenceUdp:       w.preferenceUdp,
-		sendBufSize:         1024,
-		recvBufSize:         1024,
-		workerId:            w.workerId,
-		producers:           make(map[string][]*Producer),
-		consumers:           make(map[string][]*Consumer),
-		produceTransportIds: make(map[string]string),
-		consumeTransportIds: make(map[string]string),
-	}
-
-	return router
-}
-
-func (w *Worker) CreateRouterId() string {
-	for {
-		routerId := RandString(36)
-		if _, ok := w.routers[routerId]; ok {
-			continue
-		}
-
-		return routerId
-	}
-}
-
-func (w *Worker) AddRouter(router *Router) {
-	w.routers[router.routerId] = router
-}
-
-func (w *Worker) RemoveRouter(router *Router) {
-	delete(w.routers, router.routerId)
+	mu            sync.RWMutex
 }
