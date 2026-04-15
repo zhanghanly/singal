@@ -47,8 +47,7 @@ func (w *WsServer) Run() {
 		case user := <-w.Unregister:
 			if _, ok := w.Users[user]; ok {
 				delete(w.Users, user)
-				close(user.sendResMsg)
-				close(user.sendReqMsg)
+				close(user.sendMsg)
 				room := gRoomManager.GetOrCreateRoom(user.roomId)
 				if room != nil {
 					room.DeleteUser(user)
@@ -87,9 +86,7 @@ func (w *WsServer) HandleWebSocket(rw http.ResponseWriter, r *http.Request) {
 		RemoteAddress:      remoteAddr,
 		userId:             fmt.Sprintf("user_%d", time.Now().UnixNano()),
 		createTs:           time.Now().Unix(),
-		sendResMsg:         make(chan *WsResponse),
-		sendReqMsg:         make(chan *WsRequest),
-		sendNotifyMsg:      make(chan *WsNotification),
+		sendMsg:            make(chan *WsMessage),
 		reqId:              rand.Intn(1000000),
 		newDataConsumerReq: false,
 	}

@@ -6,22 +6,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WsRequest struct {
-	Request bool        `json:"request"`
-	Id      int         `json:"id"`
-	Method  string      `json:"method"`
-	Data    interface{} `json:"data"`
-}
-
-type WsResponse struct {
-	Response bool        `json:"response"`
-	Id       int         `json:"id"`
-	Ok       bool        `json:"ok"`
-	Data     interface{} `json:"data"`
-}
-
-type WsNotification struct {
-	Notification bool        `json:"notification"`
+type WsMessage struct {
+	Request      bool        `json:"request,omitempty"`
+	Response     bool        `json:"response,omitempty"`
+	Notification bool        `json:"notification,omitempty"`
+	Ok           bool        `json:"ok"`
+	Id           int         `json:"id"`
 	Method       string      `json:"method"`
 	Data         interface{} `json:"data"`
 }
@@ -33,9 +23,7 @@ type User struct {
 	createTs           int64
 	wsConn             *websocket.Conn
 	wsServer           *WsServer
-	sendResMsg         chan *WsResponse
-	sendReqMsg         chan *WsRequest
-	sendNotifyMsg      chan *WsNotification
+	sendMsg            chan *WsMessage
 	roomId             string
 	Device             *Device
 	RemoteAddress      string
@@ -60,7 +48,7 @@ func (u *User) ReadMessage() {
 		}
 		logger.Infof("read msg=%s", string(messageBytes))
 
-		var wsReq WsRequest
+		var wsReq WsMessage
 		if err := json.Unmarshal(messageBytes, &wsReq); err != nil {
 			logger.Infof("JSON decode failed: %v", err)
 			continue
@@ -91,21 +79,21 @@ func (u *User) ReadMessage() {
 	}
 }
 
-func (u *User) handleGetRouterRtpCapabilities(req *WsRequest) {
+func (u *User) handleGetRouterRtpCapabilities(req *WsMessage) {
 	logger.Infof("recv getRouterRtpCapabilities message")
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       true,
 		Data:     gConfig,
 	}
 
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
-func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
+func (u *User) handleCreateWebrtcTransport(req *WsMessage) {
 	logger.Infof("recv createWebRtcTransport message")
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       false,
@@ -127,12 +115,12 @@ func (u *User) handleCreateWebrtcTransport(req *WsRequest) {
 			}
 		}
 	}
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
-func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
+func (u *User) handleConnectWebrtcTransport(req *WsMessage) {
 	logger.Infof("recv connectWebRtcTransport message")
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       false,
@@ -147,7 +135,7 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 				if !u.newDataConsumerReq {
 					newDataConsumerReqData := room.CreateNewDataConsumer(u, reqData.TransportId)
 					if newDataConsumerReqData != nil {
-						req := &WsRequest{
+						req := &WsMessage{
 							Request: true,
 							Id:      u.reqId,
 							Method:  "newDataConsumer",
@@ -155,7 +143,7 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 						}
 						u.reqId++
 
-						u.sendReqMsg <- req
+						u.sendMsg <- req
 						u.newDataConsumerReq = true
 					}
 				}
@@ -173,10 +161,10 @@ func (u *User) handleConnectWebrtcTransport(req *WsRequest) {
 		}
 	}
 
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
-func (u *User) handleJoin(req *WsRequest) {
+func (u *User) handleJoin(req *WsMessage) {
 	logger.Infof("recv join message")
 	room := gRoomManager.GetOrCreateRoom(u.roomId)
 	if room != nil {
@@ -196,7 +184,7 @@ func (u *User) handleJoin(req *WsRequest) {
 	}
 
 	otherUsers := room.GetOtherUsers(u)
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       true,
@@ -205,12 +193,12 @@ func (u *User) handleJoin(req *WsRequest) {
 		},
 	}
 
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
-func (u *User) handleProduceData(req *WsRequest) {
+func (u *User) handleProduceData(req *WsMessage) {
 	logger.Infof("recv produceData message")
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       false,
@@ -234,12 +222,12 @@ func (u *User) handleProduceData(req *WsRequest) {
 		}
 	}
 
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
-func (u *User) handleProduce(req *WsRequest) {
+func (u *User) handleProduce(req *WsMessage) {
 	logger.Infof("recv produce message")
-	response := &WsResponse{
+	response := &WsMessage{
 		Id:       req.Id,
 		Response: true,
 		Ok:       true,
@@ -267,31 +255,31 @@ func (u *User) handleProduce(req *WsRequest) {
 		}
 	}
 
-	u.sendResMsg <- response
+	u.sendMsg <- response
 }
 
 func (u *User) NotifyNewPeer(peerData *PeerData) {
-	notify := &WsNotification{
+	notify := &WsMessage{
 		Notification: true,
 		Method:       "newPeer",
 		Data:         peerData,
 	}
 
-	u.sendNotifyMsg <- notify
+	u.sendMsg <- notify
 }
 
 func (u *User) NotifyPeerClosed(peer *Peer) {
-	notify := &WsNotification{
+	notify := &WsMessage{
 		Notification: true,
 		Method:       "peerClosed",
 		Data:         peer,
 	}
 
-	u.sendNotifyMsg <- notify
+	u.sendMsg <- notify
 }
 
 func (u *User) RequestNewDataConsumer(reqData *NewDataConsumerReqData) {
-	req := &WsRequest{
+	req := &WsMessage{
 		Request: true,
 		Id:      u.reqId,
 		Method:  "newDataConsumer",
@@ -299,11 +287,11 @@ func (u *User) RequestNewDataConsumer(reqData *NewDataConsumerReqData) {
 	}
 	u.reqId++
 
-	u.sendReqMsg <- req
+	u.sendMsg <- req
 }
 
 func (u *User) RequestNewConsumer(reqData *NewConsumerReqData) {
-	req := &WsRequest{
+	req := &WsMessage{
 		Request: true,
 		Id:      u.reqId,
 		Method:  "newConsumer",
@@ -311,7 +299,7 @@ func (u *User) RequestNewConsumer(reqData *NewConsumerReqData) {
 	}
 	u.reqId++
 
-	u.sendReqMsg <- req
+	u.sendMsg <- req
 }
 
 func (u *User) WriteMessage() {
@@ -322,39 +310,13 @@ func (u *User) WriteMessage() {
 
 	for {
 		select {
-		case res := <-u.sendResMsg:
+		case res := <-u.sendMsg:
 			jsonData, err := json.Marshal(res)
 			if err != nil {
 				logger.Info("failed to transform wsResponse to json")
 				continue
 			}
 			logger.Infof("send response=%s to client", jsonData)
-
-			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
-				logger.Infof("write message failed: %v", err)
-				return
-			}
-
-		case req := <-u.sendReqMsg:
-			jsonData, err := json.Marshal(req)
-			if err != nil {
-				logger.Info("failed to transform wsRequest to json")
-				continue
-			}
-			logger.Infof("send request=%s to client", jsonData)
-
-			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
-				logger.Infof("write message failed: %v", err)
-				return
-			}
-
-		case notify := <-u.sendNotifyMsg:
-			jsonData, err := json.Marshal(notify)
-			if err != nil {
-				logger.Info("failed to transform wsNotification to json")
-				continue
-			}
-			logger.Infof("send notification=%s to client", jsonData)
 
 			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
 				logger.Infof("write message failed: %v", err)
