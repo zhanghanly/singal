@@ -241,8 +241,10 @@ func (r *Room) ReqPullOtherNewProducer(u *User, producer *Producer) {
 			}
 
 			newConsumerData := r.CreateNewConsumerData(consumer, producer1, v.PeerId, u.userId)
-			u.RequestNewConsumer(newConsumerData)
-			r.router.addConsumer(u.userId, consumer)
+			success := r.router.addConsumer(u.userId, consumer)
+			if success {
+				u.RequestNewConsumer(newConsumerData)
+			}
 		}
 	}
 }
@@ -379,4 +381,37 @@ func (r *Room) Produce(u *User, req *ProduceReqData) (string, error) {
 	r.ReqPullOtherNewProducer(u, producer)
 
 	return producer.producerId, nil
+}
+
+func (r *Room) CloseProducer(u *User, producerId string) error {
+	producer := r.router.GetProducer(u.userId, producerId)
+	if producer == nil {
+		return errors.New("producer not found")
+	}
+
+	_, err := gRtcServer.CloseProducer(r.router, producer)
+	if err != nil {
+		logger.Errorf("close producer failed, reason=%v", err)
+	}
+	r.router.removeProducer(u.userId, producerId)
+
+	//consumers := r.router.GetConsumerByProducerId(u.userId, producerId)
+	//for _, consumer := range consumers {
+	//	_, err := gRtcServer.CloseConsumer(r.router, consumer)
+	//	if err != nil {
+	//		logger.Errorf("close consumer failed, reason=%v", err)
+	//	}
+	//}
+	closedConsumers := r.router.removeConsumerByProducerId(u.userId, producerId)
+	for userId, consumerId := range closedConsumers {
+		if _, exist := r.users[userId]; exist {
+			data := &ConsumeResData{
+				ConsumerId: consumerId,
+			}
+
+			r.users[userId].NotifyConsumerClosed(data)
+		}
+	}
+
+	return nil
 }

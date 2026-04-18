@@ -68,14 +68,84 @@ func (r *Router) addProducer(userId string, producer *Producer) {
 	}
 }
 
-func (r *Router) addConsumer(userId string, consumer *Consumer) {
+func (r *Router) GetProducer(userId, producerId string) *Producer {
+	if _, exist := r.producers[userId]; exist {
+		for _, producer := range r.producers[userId] {
+			if producer.producerId == producerId {
+				return producer
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *Router) removeProducer(userId, producerId string) {
+	if _, exist := r.producers[userId]; exist {
+		for i, producer := range r.producers[userId] {
+			if producer.producerId == producerId {
+				r.producers[userId] = append(r.producers[userId][:i], r.producers[userId][i+1:]...)
+				logger.Infof("remove producer, userId=%s, producerId=%s", userId, producerId)
+				break
+			}
+		}
+	}
+}
+
+func (r *Router) addConsumer(userId string, consumer *Consumer) bool {
 	if consumer != nil {
 		if _, exist := r.consumers[userId]; !exist {
 			r.consumers[userId] = make([]*Consumer, 0)
+		} else {
+			for _, v := range r.consumers[userId] {
+				if v.producerId == consumer.producerId {
+					logger.Warnf("consumer exist, userId=%s, producerId=%s", userId, consumer.producerId)
+					return false
+				}
+			}
 		}
 
 		r.consumers[userId] = append(r.consumers[userId], consumer)
+		return true
 	}
+
+	return false
+}
+
+func (r *Router) GetConsumerByProducerId(userId, producerId string) []*Consumer {
+	retConsumers := make([]*Consumer, 0)
+	for user, consumers := range r.consumers {
+		if user == userId {
+			continue
+		}
+		for _, consumer := range consumers {
+			if consumer.producerId == producerId {
+				retConsumers = append(retConsumers, consumer)
+				break
+			}
+		}
+	}
+
+	return retConsumers
+}
+
+func (r *Router) removeConsumerByProducerId(userId, producerId string) map[string]string {
+	removedConsumers := make(map[string]string)
+	for user, consumers := range r.consumers {
+		if user == userId {
+			continue
+		}
+		for i, consumer := range consumers {
+			if consumer.producerId == producerId {
+				consumers = append(consumers[:i], consumers[i+1:]...)
+				logger.Infof("remove consumer, userId=%s, consumerId=%s", i, consumer.consumerId)
+				removedConsumers[user] = consumer.consumerId
+				break
+			}
+		}
+	}
+
+	return removedConsumers
 }
 
 func (r *Router) CreateConsumes(userId string) {

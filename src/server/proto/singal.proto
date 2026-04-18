@@ -163,7 +163,8 @@ message ProduceRequest {
   string producer_id = 3;
   string kind = 4;
   string app_data = 5;
-  RtpParameters rtpParameters = 6;
+  string method = 6;
+  RtpParameters rtpParameters = 7;
 }
 
 message ProduceResponse {
@@ -179,7 +180,8 @@ message ConsumeRequest {
   string consumer_id = 4;
   string kind = 5;
   string app_data = 6;
-  RtpParameters rtpParameters = 7;
+  string method = 7;
+  RtpParameters rtpParameters = 8;
 }
 
 message ConsumeResponse {

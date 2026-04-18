@@ -37,21 +37,20 @@ func main() {
 		logger.Errorf("failed to initialize setting: %v", err)
 		return
 	}
-	if err := singal.InitRedisClient(); err != nil {
-		logger.Errorf("failed to initialize redis: %v", err)
-		return
-	}
-	if err := singal.InitAuthDB(); err != nil {
-		logger.Errorf("failed to initialize auth DB: %v", err)
-		return
-	}
+	//if err := singal.InitRedisClient(); err != nil {
+	//	logger.Errorf("failed to initialize redis: %v", err)
+	//	return
+	//}
+	//if err := singal.InitAuthDB(); err != nil {
+	//	logger.Errorf("failed to initialize auth DB: %v", err)
+	//	return
+	//}
 
 	singal.NewRoomManager()
-	singal.InitEmailService()
+	//singal.InitEmailService()
 
 	var wg sync.WaitGroup
 	wg.Add(3)
-
 	// start WebSocket server
 	go func() {
 		defer wg.Done()

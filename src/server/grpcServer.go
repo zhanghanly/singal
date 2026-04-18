@@ -5,7 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	pb "singal/src/server/proto/proto"
+	pb "singal/src/server/proto"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -456,6 +456,7 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 				TransportId: producer.transportId,
 				ProducerId:  producer.producerId,
 				Kind:        producer.kind,
+				Method:      "create",
 				RtpParameters: &pb.RtpParameters{
 					Mid:  producer.parameters.RtpParameters.Mid,
 					Msid: producer.parameters.RtpParameters.Msid,
@@ -468,6 +469,35 @@ func (s *WebRtcServer) CreateProducer(router *Router, producer *Producer) (*pb.P
 					Encodings:      encodings,
 					RtpMapping:     rtpMappings,
 				},
+			},
+		},
+	}
+
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	res := resMsg.GetProduceRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
+	}
+
+	return res, nil
+}
+
+func (s *WebRtcServer) CloseProducer(router *Router, producer *Producer) (*pb.ProduceResponse, error) {
+	if router == nil || router.workerId == "" {
+		return nil, errors.New("invalid router")
+	}
+	serverMsg := &pb.ServerToWorker{
+		Payload: &pb.ServerToWorker_ProduceReq{
+			ProduceReq: &pb.ProduceRequest{
+				RouterId:    router.routerId,
+				TransportId: producer.transportId,
+				ProducerId:  producer.producerId,
+				Kind:        producer.kind,
+				Method:      "close",
 			},
 		},
 	}
@@ -574,6 +604,7 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 				ProducerId:  consumerReq.ProducerId,
 				ConsumerId:  consumerReq.ConsumerId,
 				Kind:        consumerReq.Kind,
+				Method:      "create",
 				RtpParameters: &pb.RtpParameters{
 					Mid:  consumerReq.RtpParameters.Mid,
 					Msid: consumerReq.RtpParameters.Msid,
@@ -590,6 +621,35 @@ func (s *WebRtcServer) CreateConsumer(router *Router, consumerReq *NewConsumerRe
 		},
 	}
 
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	res := resMsg.GetConsumerRes()
+	if !res.Success {
+		return nil, errors.New(res.ErrorDetail)
+	}
+
+	return res, nil
+}
+
+func (s *WebRtcServer) CloseConsumer(router *Router, consumer *Consumer) (*pb.ConsumeResponse, error) {
+	if router == nil || router.workerId == "" {
+		return nil, errors.New("invalid router")
+	}
+	serverMsg := &pb.ServerToWorker{
+		Payload: &pb.ServerToWorker_ConsumerReq{
+			ConsumerReq: &pb.ConsumeRequest{
+				RouterId:    router.routerId,
+				TransportId: consumer.transportId,
+				ProducerId:  consumer.producerId,
+				ConsumerId:  consumer.consumerId,
+				Kind:        consumer.kind,
+				Method:      "close",
+			},
+		},
+	}
 	resMsg, err := s.sendRequest(router.workerId, serverMsg)
 	if err != nil {
 		return nil, err

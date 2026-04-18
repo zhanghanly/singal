@@ -179,6 +179,10 @@ type ProduceResData struct {
 	ProducerId string `json:"producerId"`
 }
 
+type ConsumeResData struct {
+	ConsumerId string `json:"consumerId"`
+}
+
 type Peer struct {
 	PeerId        string  `json:"peerId,omitempty"`
 	DisplayName   string  `json:"displayName,omitempty"`

@@ -12,7 +12,7 @@ type WsMessage struct {
 	Notification bool        `json:"notification,omitempty"`
 	Ok           bool        `json:"ok"`
 	Id           int         `json:"id"`
-	Method       string      `json:"method"`
+	Method       string      `json:"method,omitempty"`
 	Data         interface{} `json:"data"`
 }
 
@@ -72,6 +72,9 @@ func (u *User) ReadMessage() {
 
 		case "produce":
 			u.handleProduce(&wsReq)
+
+		case "closeProducer":
+			u.HandleCloseProducer(&wsReq)
 
 		default:
 			logger.Infof("unknown message type:=%s", wsReq.Method)
@@ -258,6 +261,27 @@ func (u *User) handleProduce(req *WsMessage) {
 	u.sendMsg <- response
 }
 
+func (u *User) HandleCloseProducer(notify *WsMessage) {
+	room := gRoomManager.GetOrCreateRoom(u.roomId)
+	if room != nil {
+		reqDataBytes, err := json.Marshal(notify.Data)
+		if err == nil {
+			var reqData ProduceResData
+			err := json.Unmarshal(reqDataBytes, &reqData)
+			if err == nil {
+				err := room.CloseProducer(u, reqData.ProducerId)
+				if err == nil {
+					logger.Infof("close producer successfully, userId=%s, producerId=%s", u.userId, reqData.ProducerId)
+				} else {
+					logger.Errorf("close producer failed, reason=%v", err)
+				}
+			} else {
+				logger.Errorf("transform ProduceReqData failed, reason=%v", err)
+			}
+		}
+	}
+}
+
 func (u *User) NotifyNewPeer(peerData *PeerData) {
 	notify := &WsMessage{
 		Notification: true,
@@ -302,27 +326,33 @@ func (u *User) RequestNewConsumer(reqData *NewConsumerReqData) {
 	u.sendMsg <- req
 }
 
+func (u *User) NotifyConsumerClosed(notifyData *ConsumeResData) {
+	notify := &WsMessage{
+		Notification: true,
+		Method:       "consumerClosed",
+		Data:         notifyData,
+	}
+
+	u.sendMsg <- notify
+}
+
 func (u *User) WriteMessage() {
 	defer func() {
 		u.wsConn.Close()
 		logger.Infof("close connection from write")
 	}()
 
-	for {
-		select {
-		case res := <-u.sendMsg:
-			jsonData, err := json.Marshal(res)
-			if err != nil {
-				logger.Info("failed to transform wsResponse to json")
-				continue
-			}
-			logger.Infof("send response=%s to client", jsonData)
+	for res := range u.sendMsg {
+		jsonData, err := json.Marshal(res)
+		if err != nil {
+			logger.Info("failed to transform wsResponse to json")
+			continue
+		}
+		logger.Infof("send response=%s to client", jsonData)
 
-			if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
-				logger.Infof("write message failed: %v", err)
-				return
-			}
+		if err := u.wsConn.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+			logger.Infof("write message failed: %v", err)
+			return
 		}
 	}
-
 }
