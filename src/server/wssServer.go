@@ -53,6 +53,13 @@ func (w *WsServer) Run() {
 					room.DeleteUser(user)
 					logger.Infof("userId=%s peerId=%s roomId=%s disconnected", user.userId, user.PeerId, user.roomId)
 				}
+				// if no user in room, delete room
+				if room.GetUserNums() == 0 {
+					room.Close()
+					gRoomManager.DeleteRoom(room.roomId)
+					logger.Infof("roomId=%s deleted", room.roomId)
+				}
+
 			}
 		}
 	}

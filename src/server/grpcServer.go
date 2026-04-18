@@ -252,10 +252,11 @@ func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
 
 	serverMsg := &pb.ServerToWorker{
 		Payload: &pb.ServerToWorker_CreateRouterReq{
-			CreateRouterReq: &pb.CreateRouterRequest{
+			CreateRouterReq: &pb.RouterRequest{
 				WorkerId: worker.workerId,
 				RoomId:   router.routerId,
 				ServerId: RandString(10),
+				Method:   "create",
 				Info: &pb.ListenInfo{
 					Protocol:         "UDP",
 					Ip:               "0.0.0.0",
@@ -287,6 +288,34 @@ func (s *WebRtcServer) CreateRouterOnWorker() (*Router, error) {
 	logger.Infof("Router created on worker %s: routerId=%s", worker.workerId, router.routerId)
 
 	return router, nil
+}
+
+func (s *WebRtcServer) CloseRouterOnWorker(router *Router) error {
+	serverMsg := &pb.ServerToWorker{
+		Payload: &pb.ServerToWorker_CreateRouterReq{
+			CreateRouterReq: &pb.RouterRequest{
+				WorkerId: router.workerId,
+				RoomId:   router.routerId,
+				ServerId: RandString(10),
+				Method:   "close",
+			},
+		},
+	}
+
+	resMsg, err := s.sendRequest(router.workerId, serverMsg)
+	if err != nil {
+		return err
+	}
+
+	res := resMsg.GetCreateRouterRes()
+	if !res.Success {
+		return errors.New(res.ErrorDetail)
+	}
+
+	GetWorkerManager().RemoveRouter(router.workerId, router.routerId)
+	logger.Infof("Router closed on worker %s: routerId=%s", router.workerId, router.routerId)
+
+	return nil
 }
 
 func (s *WebRtcServer) CreateWebrtcTransport(router *Router) (*pb.CreateTransportResponse, error) {

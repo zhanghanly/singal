@@ -243,30 +243,31 @@ func (x *ListenInfo) GetSendBufferSize() uint32 {
 	return 0
 }
 
-type CreateRouterRequest struct {
+type RouterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
 	RoomId        string                 `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	ServerId      string                 `protobuf:"bytes,3,opt,name=serverId,proto3" json:"serverId,omitempty"`
-	Info          *ListenInfo            `protobuf:"bytes,4,opt,name=info,proto3" json:"info,omitempty"`
+	Method        string                 `protobuf:"bytes,4,opt,name=method,proto3" json:"method,omitempty"`
+	Info          *ListenInfo            `protobuf:"bytes,5,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateRouterRequest) Reset() {
-	*x = CreateRouterRequest{}
+func (x *RouterRequest) Reset() {
+	*x = RouterRequest{}
 	mi := &file_singal_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateRouterRequest) String() string {
+func (x *RouterRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateRouterRequest) ProtoMessage() {}
+func (*RouterRequest) ProtoMessage() {}
 
-func (x *CreateRouterRequest) ProtoReflect() protoreflect.Message {
+func (x *RouterRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_singal_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -278,40 +279,47 @@ func (x *CreateRouterRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateRouterRequest.ProtoReflect.Descriptor instead.
-func (*CreateRouterRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use RouterRequest.ProtoReflect.Descriptor instead.
+func (*RouterRequest) Descriptor() ([]byte, []int) {
 	return file_singal_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateRouterRequest) GetWorkerId() string {
+func (x *RouterRequest) GetWorkerId() string {
 	if x != nil {
 		return x.WorkerId
 	}
 	return ""
 }
 
-func (x *CreateRouterRequest) GetRoomId() string {
+func (x *RouterRequest) GetRoomId() string {
 	if x != nil {
 		return x.RoomId
 	}
 	return ""
 }
 
-func (x *CreateRouterRequest) GetServerId() string {
+func (x *RouterRequest) GetServerId() string {
 	if x != nil {
 		return x.ServerId
 	}
 	return ""
 }
 
-func (x *CreateRouterRequest) GetInfo() *ListenInfo {
+func (x *RouterRequest) GetMethod() string {
+	if x != nil {
+		return x.Method
+	}
+	return ""
+}
+
+func (x *RouterRequest) GetInfo() *ListenInfo {
 	if x != nil {
 		return x.Info
 	}
 	return nil
 }
 
-type CreateRouterResponse struct {
+type RouterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RouterId      string                 `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
 	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
@@ -320,20 +328,20 @@ type CreateRouterResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateRouterResponse) Reset() {
-	*x = CreateRouterResponse{}
+func (x *RouterResponse) Reset() {
+	*x = RouterResponse{}
 	mi := &file_singal_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateRouterResponse) String() string {
+func (x *RouterResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateRouterResponse) ProtoMessage() {}
+func (*RouterResponse) ProtoMessage() {}
 
-func (x *CreateRouterResponse) ProtoReflect() protoreflect.Message {
+func (x *RouterResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_singal_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -345,26 +353,26 @@ func (x *CreateRouterResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateRouterResponse.ProtoReflect.Descriptor instead.
-func (*CreateRouterResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use RouterResponse.ProtoReflect.Descriptor instead.
+func (*RouterResponse) Descriptor() ([]byte, []int) {
 	return file_singal_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateRouterResponse) GetRouterId() string {
+func (x *RouterResponse) GetRouterId() string {
 	if x != nil {
 		return x.RouterId
 	}
 	return ""
 }
 
-func (x *CreateRouterResponse) GetSuccess() bool {
+func (x *RouterResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *CreateRouterResponse) GetErrorDetail() string {
+func (x *RouterResponse) GetErrorDetail() string {
 	if x != nil {
 		return x.ErrorDetail
 	}
@@ -2125,7 +2133,7 @@ func (x *WorkerToServer) GetPayload() isWorkerToServer_Payload {
 	return nil
 }
 
-func (x *WorkerToServer) GetCreateRouterRes() *CreateRouterResponse {
+func (x *WorkerToServer) GetCreateRouterRes() *RouterResponse {
 	if x != nil {
 		if x, ok := x.Payload.(*WorkerToServer_CreateRouterRes); ok {
 			return x.CreateRouterRes
@@ -2202,7 +2210,7 @@ type isWorkerToServer_Payload interface {
 }
 
 type WorkerToServer_CreateRouterRes struct {
-	CreateRouterRes *CreateRouterResponse `protobuf:"bytes,2,opt,name=create_router_res,json=createRouterRes,proto3,oneof"`
+	CreateRouterRes *RouterResponse `protobuf:"bytes,2,opt,name=create_router_res,json=createRouterRes,proto3,oneof"`
 }
 
 type WorkerToServer_CreateTransportRes struct {
@@ -2311,7 +2319,7 @@ func (x *ServerToWorker) GetPayload() isServerToWorker_Payload {
 	return nil
 }
 
-func (x *ServerToWorker) GetCreateRouterReq() *CreateRouterRequest {
+func (x *ServerToWorker) GetCreateRouterReq() *RouterRequest {
 	if x != nil {
 		if x, ok := x.Payload.(*ServerToWorker_CreateRouterReq); ok {
 			return x.CreateRouterReq
@@ -2388,7 +2396,7 @@ type isServerToWorker_Payload interface {
 }
 
 type ServerToWorker_CreateRouterReq struct {
-	CreateRouterReq *CreateRouterRequest `protobuf:"bytes,2,opt,name=create_router_req,json=createRouterReq,proto3,oneof"`
+	CreateRouterReq *RouterRequest `protobuf:"bytes,2,opt,name=create_router_req,json=createRouterReq,proto3,oneof"`
 }
 
 type ServerToWorker_CreateTransportReq struct {
@@ -2453,13 +2461,14 @@ const file_singal_proto_rawDesc = "" +
 	"\fudpReusePort\x18\t \x01(\bR\fudpReusePort\x12(\n" +
 	"\x10recv_buffer_size\x18\n" +
 	" \x01(\rR\x0erecvBufferSize\x12(\n" +
-	"\x10send_buffer_size\x18\v \x01(\rR\x0esendBufferSize\"\x8f\x01\n" +
-	"\x13CreateRouterRequest\x12\x1b\n" +
+	"\x10send_buffer_size\x18\v \x01(\rR\x0esendBufferSize\"\xa1\x01\n" +
+	"\rRouterRequest\x12\x1b\n" +
 	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x17\n" +
 	"\aroom_id\x18\x02 \x01(\tR\x06roomId\x12\x1a\n" +
-	"\bserverId\x18\x03 \x01(\tR\bserverId\x12&\n" +
-	"\x04info\x18\x04 \x01(\v2\x12.server.ListenInfoR\x04info\"p\n" +
-	"\x14CreateRouterResponse\x12\x1b\n" +
+	"\bserverId\x18\x03 \x01(\tR\bserverId\x12\x16\n" +
+	"\x06method\x18\x04 \x01(\tR\x06method\x12&\n" +
+	"\x04info\x18\x05 \x01(\v2\x12.server.ListenInfoR\x04info\"j\n" +
+	"\x0eRouterResponse\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
 	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"E\n" +
@@ -2620,10 +2629,10 @@ const file_singal_proto_rawDesc = "" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
 	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail\"3\n" +
 	"\x17WorkerKeepaliveResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xcf\x04\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xc9\x04\n" +
 	"\x0eWorkerToServer\x12\x15\n" +
-	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12J\n" +
-	"\x11create_router_res\x18\x02 \x01(\v2\x1c.server.CreateRouterResponseH\x00R\x0fcreateRouterRes\x12S\n" +
+	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12D\n" +
+	"\x11create_router_res\x18\x02 \x01(\v2\x16.server.RouterResponseH\x00R\x0fcreateRouterRes\x12S\n" +
 	"\x14create_transport_res\x18\x03 \x01(\v2\x1f.server.CreateTransportResponseH\x00R\x12createTransportRes\x12V\n" +
 	"\x15connect_transport_res\x18\x04 \x01(\v2 .server.ConnectTransportResponseH\x00R\x13connectTransportRes\x12:\n" +
 	"\vproduce_res\x18\x05 \x01(\v2\x17.server.ProduceResponseH\x00R\n" +
@@ -2633,10 +2642,10 @@ const file_singal_proto_rawDesc = "" +
 	"\x10worker_keepalive\x18\b \x01(\v2\x17.server.WorkerKeepaliveH\x00R\x0fworkerKeepalive\x12\x1f\n" +
 	"\n" +
 	"stats_push\x18\t \x01(\tH\x00R\tstatsPushB\t\n" +
-	"\apayload\"\xfa\x04\n" +
+	"\apayload\"\xf4\x04\n" +
 	"\x0eServerToWorker\x12\x15\n" +
-	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12I\n" +
-	"\x11create_router_req\x18\x02 \x01(\v2\x1b.server.CreateRouterRequestH\x00R\x0fcreateRouterReq\x12R\n" +
+	"\x06seq_id\x18\x01 \x01(\x04R\x05seqId\x12C\n" +
+	"\x11create_router_req\x18\x02 \x01(\v2\x15.server.RouterRequestH\x00R\x0fcreateRouterReq\x12R\n" +
 	"\x14create_transport_req\x18\x03 \x01(\v2\x1e.server.CreateTransportRequestH\x00R\x12createTransportReq\x12U\n" +
 	"\x15connect_transport_req\x18\x04 \x01(\v2\x1f.server.ConnectTransportRequestH\x00R\x13connectTransportReq\x129\n" +
 	"\vproduce_req\x18\x05 \x01(\v2\x16.server.ProduceRequestH\x00R\n" +
@@ -2675,8 +2684,8 @@ var file_singal_proto_goTypes = []any{
 	(TransportDirection)(0),          // 0: server.TransportDirection
 	(MediaKind)(0),                   // 1: server.MediaKind
 	(*ListenInfo)(nil),               // 2: server.ListenInfo
-	(*CreateRouterRequest)(nil),      // 3: server.CreateRouterRequest
-	(*CreateRouterResponse)(nil),     // 4: server.CreateRouterResponse
+	(*RouterRequest)(nil),            // 3: server.RouterRequest
+	(*RouterResponse)(nil),           // 4: server.RouterResponse
 	(*DtlsFingerprint)(nil),          // 5: server.DtlsFingerprint
 	(*IceCandidate)(nil),             // 6: server.IceCandidate
 	(*CreateTransportRequest)(nil),   // 7: server.CreateTransportRequest
@@ -2704,7 +2713,7 @@ var file_singal_proto_goTypes = []any{
 	(*ServerToWorker)(nil),           // 29: server.ServerToWorker
 }
 var file_singal_proto_depIdxs = []int32{
-	2,  // 0: server.CreateRouterRequest.info:type_name -> server.ListenInfo
+	2,  // 0: server.RouterRequest.info:type_name -> server.ListenInfo
 	0,  // 1: server.CreateTransportRequest.direction:type_name -> server.TransportDirection
 	6,  // 2: server.CreateTransportResponse.ice_candidates:type_name -> server.IceCandidate
 	5,  // 3: server.CreateTransportResponse.dtls_fingerprints:type_name -> server.DtlsFingerprint
@@ -2720,14 +2729,14 @@ var file_singal_proto_depIdxs = []int32{
 	19, // 13: server.ProduceRequest.rtpParameters:type_name -> server.RtpParameters
 	19, // 14: server.ConsumeRequest.rtpParameters:type_name -> server.RtpParameters
 	1,  // 15: server.ConsumeResponse.kind:type_name -> server.MediaKind
-	4,  // 16: server.WorkerToServer.create_router_res:type_name -> server.CreateRouterResponse
+	4,  // 16: server.WorkerToServer.create_router_res:type_name -> server.RouterResponse
 	8,  // 17: server.WorkerToServer.create_transport_res:type_name -> server.CreateTransportResponse
 	10, // 18: server.WorkerToServer.connect_transport_res:type_name -> server.ConnectTransportResponse
 	21, // 19: server.WorkerToServer.produce_res:type_name -> server.ProduceResponse
 	23, // 20: server.WorkerToServer.consumer_res:type_name -> server.ConsumeResponse
 	24, // 21: server.WorkerToServer.worker_register:type_name -> server.WorkerRegister
 	25, // 22: server.WorkerToServer.worker_keepalive:type_name -> server.WorkerKeepalive
-	3,  // 23: server.ServerToWorker.create_router_req:type_name -> server.CreateRouterRequest
+	3,  // 23: server.ServerToWorker.create_router_req:type_name -> server.RouterRequest
 	7,  // 24: server.ServerToWorker.create_transport_req:type_name -> server.CreateTransportRequest
 	9,  // 25: server.ServerToWorker.connect_transport_req:type_name -> server.ConnectTransportRequest
 	20, // 26: server.ServerToWorker.produce_req:type_name -> server.ProduceRequest

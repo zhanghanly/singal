@@ -78,7 +78,12 @@ type Room struct {
 	users    map[string]*User
 }
 
-func NewRoom(id string, route *Router) *Room {
+func NewRoom(id string) *Room {
+	route, err := gRtcServer.CreateRouterOnWorker()
+	if err != nil {
+		logger.Errorf("create router failed, reason=%v", err)
+		return nil
+	}
 	return &Room{
 		roomId:   id,
 		createTs: time.Now().Unix(),
@@ -93,6 +98,10 @@ func (r *Room) AddUser(user *User) {
 
 		logger.Infof("add userId=%s peerId=%s to roomId=%s", user.userId, user.PeerId, r.roomId)
 	}
+}
+
+func (r *Room) GetUserNums() int {
+	return len(r.users)
 }
 
 func (r *Room) DeleteUser(user *User) {
@@ -414,4 +423,11 @@ func (r *Room) CloseProducer(u *User, producerId string) error {
 	}
 
 	return nil
+}
+
+func (r *Room) Close() {
+	err := gRtcServer.CloseRouterOnWorker(r.router)
+	if err != nil {
+		logger.Errorf("close router failed, reason=%v", err)
+	}
 }

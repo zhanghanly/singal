@@ -17,14 +17,15 @@ message ListenInfo {
   uint32 send_buffer_size = 11;
 }
 
-message CreateRouterRequest {
+message RouterRequest {
   string worker_id = 1;
   string room_id = 2;
   string serverId = 3;
-  ListenInfo info = 4;
+  string method = 4;
+  ListenInfo info = 5;
 }
 
-message CreateRouterResponse {
+message RouterResponse {
   string router_id = 1;
   bool success = 2;
   string error_detail = 3;
@@ -223,7 +224,7 @@ message WorkerToServer {
   uint64 seq_id = 1;
 
   oneof payload {
-    CreateRouterResponse create_router_res = 2;
+    RouterResponse create_router_res = 2;
     CreateTransportResponse create_transport_res =3;
     ConnectTransportResponse connect_transport_res =4;
     ProduceResponse produce_res = 5;
@@ -238,7 +239,7 @@ message ServerToWorker {
   uint64 seq_id = 1;
 
   oneof payload {
-    CreateRouterRequest create_router_req = 2;
+    RouterRequest create_router_req = 2;
     CreateTransportRequest create_transport_req =3;
     ConnectTransportRequest connect_transport_req =4;
     ProduceRequest produce_req = 5;
