@@ -249,9 +249,9 @@ func (r *Room) ReqPullOtherNewProducer(u *User, producer *Producer) {
 				producerId:  producer1.producerId,
 			}
 
-			newConsumerData := r.CreateNewConsumerData(consumer, producer1, v.PeerId, u.userId)
 			success := r.router.addConsumer(u.userId, consumer)
 			if success {
+				newConsumerData := r.CreateNewConsumerData(consumer, producer1, v.PeerId, u.userId)
 				u.RequestNewConsumer(newConsumerData)
 			}
 		}
