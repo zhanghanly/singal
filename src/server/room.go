@@ -271,9 +271,9 @@ func (r *Room) ReqOtherNewConsumer(u *User, producer *Producer) {
 			producerId:  producer.producerId,
 		}
 
+		r.router.addConsumer(v.userId, consumer)
 		newConsumerData := r.CreateNewConsumerData(consumer, producer, u.PeerId, v.userId)
 		v.RequestNewConsumer(newConsumerData)
-		r.router.addConsumer(v.userId, consumer)
 	}
 }
 
