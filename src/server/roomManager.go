@@ -14,8 +14,13 @@ func NewRoomManager() {
 
 func (rm *RoomManager) GetOrCreateRoom(roomId string) *Room {
 	if _, ok := rm.rooms[roomId]; !ok {
-		rm.rooms[roomId] = NewRoom(roomId)
-		logger.Infof("create room roomId=%s", roomId)
+		room := NewRoom(roomId)
+		if room != nil {
+			rm.rooms[roomId] = room
+			logger.Infof("create room roomId=%s", roomId)
+		}
+
+		return room
 	}
 
 	return rm.rooms[roomId]
