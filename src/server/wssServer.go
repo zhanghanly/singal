@@ -106,9 +106,9 @@ func StartWssServer() {
 	server := NewServer()
 	go server.Run()
 
-	logger.Infoln("wss Server running on :8080...")
+	logger.Infoln("wss Server running on :8000...")
 	http.HandleFunc("/", server.HandleWebSocket)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8000", nil)
 	//err := http.ListenAndServeTLS(":4443", gConfig.Http.Cert, gConfig.Http.Key, nil)
 	//if err != nil {
 	//	logger.Warnf("start wss server failed, %v", err)

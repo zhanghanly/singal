@@ -55,10 +55,10 @@ type RouterRtpCapabilities struct {
 
 type Config struct {
 	RtpCapabilities RouterRtpCapabilities `json:"routerRtpCapabilities"`
-	Http            Http                  `json:"http"`
-	Database        DatabaseConfig        `json:"database"`
-	Redis           RedisConfig           `json:"redis"`
-	Email           EmailConfig           `json:"email"`
+	Http            Http                  `json:"-"`
+	Database        DatabaseConfig        `json:"-"`
+	Redis           RedisConfig           `json:"-"`
+	Email           EmailConfig           `json:"-"`
 }
 
 type DatabaseConfig struct {
@@ -86,7 +86,7 @@ type EmailConfig struct {
 var gConfig *Config
 
 func InitSetting() error {
-	fileData, err := os.ReadFile("./config.json")
+	fileData, err := os.ReadFile("../conf/config.json")
 	if err != nil {
 		logger.Info("read config.json failed:")
 		return err

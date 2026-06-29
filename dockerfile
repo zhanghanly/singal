@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 ARG PROJECT_NAME 
 ARG BUILD_VERSION
@@ -7,7 +7,7 @@ ARG GIT_BRANCH
 ARG GO_VERSION
 
 WORKDIR /app
-COPY config.yml /app
+COPY config.json /app
 
 # 设置Go代理和环境变量
 ENV GOPROXY=https://goproxy.cn,direct \
@@ -17,7 +17,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/media_center \
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/singal \
        -ldflags "-s -X 'main.ProjectName=${PROJECT_NAME}' \
                     -X 'main.BuildVersion=${BUILD_VERSION}' \
                     -X 'main.BuildTime=${BUILD_TIME}' \
@@ -39,12 +39,12 @@ RUN addgroup -g 1000 appuser && \
 WORKDIR /home/appuser/
 RUN mkdir log conf bin
 # 从构建阶段复制编译好的二进制文件
-COPY --from=builder --chown=appuser:appuser /app/media_center ./bin
-COPY --from=builder --chown=appuser:appuser /app/config.yml ./conf
+COPY --from=builder --chown=appuser:appuser /app/singal ./bin
+COPY --from=builder --chown=appuser:appuser /app/config.json ./conf
 
 # 切换到非root用户
 USER appuser
 WORKDIR /home/appuser/bin
 
 EXPOSE 8100/tcp
-CMD ["sh", "-c", "./media_center"]
+CMD ["sh", "-c", "./singal"]
